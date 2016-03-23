@@ -4,9 +4,9 @@
 # FILES:    MD5     NAME
 
 import sqlite3
-import sys
 
 class ManageDB:
+
     # Metodo che inizializza il database
     def __init__(self):
 
@@ -23,6 +23,9 @@ class ManageDB:
             # Creo la tabella dei file e la cancello se esiste
             c.execute("DROP TABLE IF EXISTS FILES;")
             c.execute("CREATE TABLE FILES (NAME TEXT NOT NULL, MD5 TEXT NOT NULL)")
+
+            # Creo la lista dei pktid
+            self.__pkIdList = []
 
             conn.commit()
 
@@ -330,9 +333,95 @@ class ManageDB:
             if conn:
                 conn.close()
 
+    # Metodo che aggiunge un packetId
+    def addPkt(self, id):
+
+        # Aggiungo il packetId
+        self.__pkIdList.append(id)
+
+    # Metodo che rimuove un packetId
+    def removePkt(self, id):
+
+        # Rimuovo il packetId
+        self.__pkIdList.remove(id)
+
+        # Se e' presente un altro packetId uguale, genero una eccezione
+        if(self.__pkIdList.count(id) > 0):
+            raise Exception("Errore - removePkt: packetId multipli con stesso id")
+
+    # Metodo che ritorna la lista dei packetId
+    def listPkt(self):
+
+        # Ritorno tutti i packetId in una lista differente
+        return list(self.__pkIdList)
+
+    # Metodo che ricerca un packetId
+    def searchPkt(self, id):
+
+        count = self.__pkIdList.count(id)
+
+        # Ritorno True se il packet e' presente, altrimenti False
+        if(count == 1):
+            return True
+        elif(count == 0):
+            return False
+        else:
+            raise Exception("Errore - searchPkt: packetId multipli con stesso id")
+
+
 '''
 
-# TEST
+# TEST PACKETID
+manager = ManageDB()
+
+# Inserisco packet
+print("1) Inserisco packet")
+manager.addPkt(1)
+manager.addPkt(2)
+manager.addPkt(3)
+
+print("Packet presenti")
+print(manager.listPkt())
+print("")
+
+
+# Inserisco packet
+print("2) Rimuovo packet")
+manager.removePkt(3)
+
+print("Packet presenti")
+print(manager.listPkt())
+print("")
+
+
+# Inserisco packet dalla lista di copia
+print("3) Aggiungo packet alla lista di copia")
+manager.listPkt().append(5)
+
+print("Packet presenti")
+print(manager.listPkt())
+print("")
+
+
+# Ricerco un packet
+print("4) Ricerco un packet presente")
+
+print(manager.searchPkt(1))
+print("")
+
+
+# Ricerco un packet
+print("5) Ricerco un packet non presente")
+
+print(manager.searchPkt(100))
+print("")
+
+'''
+
+
+'''
+
+# TEST CLIENTS E FILES
 manager = ManageDB()
 
 # Inserimento peer
