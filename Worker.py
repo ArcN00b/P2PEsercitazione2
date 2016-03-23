@@ -1,4 +1,5 @@
 import threading
+import select
 import socket
 import struct
 import time
@@ -134,6 +135,12 @@ class Worker(threading.Thread):
                 self.client.sendall(resp.encode())
             print("comando inviato: " + resp)
             time.sleep(1)
+
+
+            # input_ready, read_ready, error_ready = select.select([sys.stdin], [], [])
+            # for s in input_ready:
+            #     print(sys.stdin.readline() )
+
             # ricezione del dato e immagazzinamento fino al max
             data = self.client.recv(2048)
 

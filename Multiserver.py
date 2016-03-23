@@ -4,7 +4,7 @@ import sys
 import subprocess
 from Worker import *
 from ManageDB import *
-from Monitor import *
+#from Monitor import *
 
 # Insieme di costanti utilizzate nel progetto
 #TCP_IP4 = '127.0.0.1'  # Con questo ip il bind viene effettuato su tutte le interfacce di rete
@@ -79,7 +79,8 @@ class MultiServer:
 
                 else:
                     print(sys.stdin.readline() )
-                    pid=subprocess.Popen(args=["gnome-terminal","-e \"python3 /home/flavio/Scrivania/ciao.py\""]).pid
+                    #p="-e \'python3 /home/flavio/Scrivania/ciao.py\'"
+                    pid=subprocess.Popen(args=["gnome-terminal",'-e','python3 /home/flavio/Scrivania/ciao.py pippo']).pid
 
 tcpServer = MultiServer()
 tcpServer.start()
