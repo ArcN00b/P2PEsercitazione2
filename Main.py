@@ -9,7 +9,7 @@ class Peer:
     def __init__(self,ipv4,ipv6):
         self.ipv4=ipv4
         self.ipv6=ipv6
-        self.port=2545
+        self.port=2680
         self.stop_queue = queue.Queue(1)
         u1 = ReceiveServerIPV4(self.stop_queue,self.ipv4,self.port,(3,self.ipv4,self.port))
         self.server_thread = threading.Thread(target=u1)#crea un thread e gli assa l'handler per il server da far partire

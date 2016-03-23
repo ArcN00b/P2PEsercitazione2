@@ -15,7 +15,7 @@ while True:
         b='IPV6 '
         sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
-    sock.connect((a, 2545))
+    sock.connect((a, 2680))
     sock.sendall((b+sys.argv[1]).encode())
 
     time.sleep(2)
