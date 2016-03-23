@@ -1,0 +1,442 @@
+# Ho mantenuto i nomi delle tabelle per semplicita
+# I peer sono salvati nella tabella CLIENTS
+# CLIENTS:  IP      PORT
+# FILES:    MD5     NAME
+
+import sqlite3
+import sys
+
+class ManageDB:
+    # Metodo che inizializza il database
+    def __init__(self):
+
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Creo la tabella dei peer e la cancello se esiste
+            c.execute("DROP TABLE IF EXISTS CLIENTS;")
+            c.execute("CREATE TABLE CLIENTS (IP TEXT NOT NULL, PORT TEXT NOT NULL)")
+
+            # Creo la tabella dei file e la cancello se esiste
+            c.execute("DROP TABLE IF EXISTS FILES;")
+            c.execute("CREATE TABLE FILES (NAME TEXT NOT NULL, MD5 TEXT NOT NULL)")
+
+            conn.commit()
+
+        except sqlite3.Error as e:
+
+            # Gestisco l'eccezione
+            if conn:
+                conn.rollback()
+
+            raise Exception("Errore - init: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo che aggiunge un peer
+    def addClient(self, ip, port):
+
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Aggiungo il client
+            c.execute("INSERT INTO CLIENTS (IP, PORT) VALUES (?,?)" , (ip, port))
+            conn.commit()
+
+        except sqlite3.Error as e:
+
+            # Gestisco l'eccezione
+            if conn:
+                conn.rollback()
+
+            raise Exception("Errore - addClient: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo che aggiunge un file
+    def addFile(self, md5, name):
+
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Controllo se esiste il file
+            c.execute("SELECT COUNT(MD5) FROM FILES WHERE MD5=:COD" , {"COD": md5})
+            num = c.fetchall()
+
+            # Aggiungo  il file se non e' presente
+            if num[0][0] == 0:
+                c.execute("INSERT INTO FILES (NAME, MD5) VALUES (?,?)" , (name, md5))
+
+            conn.commit()
+
+        except sqlite3.Error as e:
+
+            # Gestisco l'eccezione
+            if conn:
+                conn.rollback()
+
+            raise Exception("Errore - addFile: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo che elimina un peer tramite indirizzo ip e porta
+    def removeClient(self, ip, port):
+
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Rimuovo il client
+            c.execute("DELETE FROM CLIENTS WHERE IP=:INDIP AND PORT=:PORTA", {"INDIP": ip, "PORTA": port})
+            conn.commit()
+
+        except sqlite3.Error as e:
+
+            # Gestisco l'eccezione
+            if conn:
+                conn.rollback()
+
+            raise Exception("Errore - removeClient: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo che elimina il file identificato da md5
+    def removeFile(self, md5):
+
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Rimuovo il file
+            c.execute("DELETE FROM FILES WHERE MD5=:COD" , {"COD": md5} )
+            conn.commit()
+
+        except sqlite3.Error as e:
+
+            # Gestisco l'eccezione
+            if conn:
+                conn.rollback()
+
+            raise Exception("Errore - removeFile: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo che elimina tutti i file
+    def removeAllFile(self):
+
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Rimuovo tutti i file
+            c.execute("DELETE FROM FILES")
+            conn.commit()
+
+        except sqlite3.Error as e:
+
+            # Gestisco l'eccezione
+            if conn:
+                conn.rollback()
+
+            raise Exception("Errore - removeAllFile: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo per ricercare il nome del file tramite md5
+    def findFile(self,md5):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Cerca il file
+            c.execute("SELECT DISTINCT NAME FROM FILES WHERE MD5 = ? " , (md5,))
+            conn.commit()
+
+            result = c.fetchall()
+            return result
+
+        except sqlite3.Error as e:
+
+            raise Exception("Errore - findFile: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo per ricercare l'md5 del file da stringa di ricerca
+    def findMd5(self,name):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Cerca il file
+            c.execute("SELECT DISTINCT MD5 FROM FILES WHERE NAME LIKE '%" + name + "%' ")
+            conn.commit()
+
+            result = c.fetchall()
+            return result
+
+        except sqlite3.Error as e:
+
+            raise Exception("Errore - findFile: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo per verificare se esiste un file tramite md5
+    def searchIfExistFile(self,md5):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Cerca il file
+            c.execute("SELECT COUNT(MD5) FROM FILES WHERE MD5=:COD" , {"COD": md5})
+            conn.commit()
+
+            result = c.fetchall()
+            return result
+
+        except sqlite3.Error as e:
+
+            raise Exception("Errore - searchIfExistFile: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo che ritorna il numero di file presenti con nome simile alla stringa di ricerca
+    def numOfFile(self, name):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Cerca il numero di file
+            c.execute("SELECT COUNT(MD5) FROM FILES WHERE NAME LIKE '%" + name + "%' ")
+
+            conn.commit()
+
+            result = c.fetchall()
+            return result
+
+        except sqlite3.Error as e:
+
+            raise Exception("Errore - numOfFile: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo che ritorna la lista dei peer
+    def listClient(self):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Prelevo la lista di peer
+            c.execute("SELECT * FROM CLIENTS")
+            conn.commit()
+
+            return c.fetchall()
+
+        except sqlite3.Error as e:
+
+            raise Exception("Errore - ListCLients: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo che ritorna la lista dei file
+    def listFile(self):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Prelevo la lista di file
+            c.execute("SELECT MD5, NAME FROM FILES")
+            conn.commit()
+
+            return c.fetchall()
+
+        except sqlite3.Error as e:
+
+            raise Exception("Errore - listFile: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+'''
+
+# TEST
+manager = ManageDB()
+
+# Inserimento peer
+print("1) Inserisco peer")
+manager.addClient("1.1.1.1","1")
+manager.addClient("1.1.1.1","2")
+manager.addClient("2.2.2.2","2")
+
+print("Peer presenti")
+all_rows = manager.listClient()
+for row in all_rows:
+    print('{0} : {1}'.format(row[0], row[1]))
+print("")
+
+
+# Rimozione peer
+print("2) Rimuovo un peer in ascolto su una porta")
+manager.removeClient("1.1.1.1","2")
+
+print("Peer presenti")
+all_rows = manager.listClient()
+for row in all_rows:
+    print('{0} : {1}'.format(row[0], row[1]))
+print("")
+
+
+# Inserimento file
+print("3) Inserisco file")
+manager.addFile("123", "pippo")
+manager.addFile("345", "pluto")
+manager.addFile("567", "paperino")
+manager.addFile("789", "topolino")
+
+print("File presenti")
+all_rows = manager.listFile()
+for row in all_rows:
+    print('{0} : {1}'.format(row[0], row[1]))
+print("")
+
+
+# Rimozione file
+print("4) Rimuovo singolo file")
+manager.removeFile("345")
+
+print("File presenti")
+all_rows = manager.listFile()
+for row in all_rows:
+    print('{0} : {1}'.format(row[0], row[1]))
+print("")
+
+
+# Ricerca file per md5
+print("5) Ricerco file per md5")
+
+all_rows = manager.findFile("123")
+for row in all_rows:
+    print('{0}'.format(row[0]))
+print("")
+
+
+# Ricerca file per nome
+print("6) Ricerco file per nome")
+
+all_rows = manager.findMd5("pippo")
+for row in all_rows:
+    print('{0}'.format(row[0]))
+print("")
+
+
+# Ricerca di un file
+print("7) Controllo se esiste un file presente")
+
+all_rows = manager.searchIfExistFile("123")
+for row in all_rows:
+    print('{0}'.format(row[0]))
+print("")
+
+
+# Ricerca di un file
+print("8) Controllo se esiste un file non presente")
+
+all_rows = manager.searchIfExistFile("000")
+for row in all_rows:
+    print('{0}'.format(row[0]))
+print("")
+
+
+# Numero di file presenti
+print("9) Controllo quanti file sono presenti")
+
+all_rows = manager.numOfFile("")
+for row in all_rows:
+    print('{0}'.format(row[0]))
+print("")
+
+
+# Rimozione file
+print("10) Rimuovo tutti i file")
+manager.removeAllFile()
+
+print("File presenti")
+all_rows = manager.listFile()
+for row in all_rows:
+    print('{0} : {1}'.format(row[0], row[1]))
+print("")
+
+'''
