@@ -4,6 +4,7 @@
 # FILES:    MD5     NAME
 
 import sqlite3
+import time
 
 class ManageDB:
 
@@ -17,15 +18,21 @@ class ManageDB:
             c = conn.cursor()
 
             # Creo la tabella dei peer e la cancello se esiste
-            c.execute("DROP TABLE IF EXISTS CLIENTS;")
+            c.execute("DROP TABLE IF EXISTS CLIENTS")
             c.execute("CREATE TABLE CLIENTS (IP TEXT NOT NULL, PORT TEXT NOT NULL)")
 
             # Creo la tabella dei file e la cancello se esiste
-            c.execute("DROP TABLE IF EXISTS FILES;")
+            c.execute("DROP TABLE IF EXISTS FILES")
             c.execute("CREATE TABLE FILES (NAME TEXT NOT NULL, MD5 TEXT NOT NULL)")
 
+            # Creo la tabella dei packetId e la cancello se esiste
+            c.execute("DROP TABLE IF EXISTS PACKETS")
+            c.execute("CREATE TABLE PACKETS (ID TEXT NOT NULL, DATE INTEGER NOT NULL)")
+
+            '''
             # Creo la lista dei pktid
             self.__pkIdList = []
+            '''
 
             conn.commit()
 
@@ -335,6 +342,107 @@ class ManageDB:
 
     # Metodo che aggiunge un packetId
     def addPkt(self, id):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Aggiungo il packet
+            c.execute("INSERT INTO PACKETS (ID, DATE) VALUES ( ?, DATETIME('NOW'))" , (id,))
+            conn.commit()
+
+        except sqlite3.Error as e:
+
+            # Gestisco l'eccezione
+            if conn:
+                conn.rollback()
+
+            raise Exception("Errore - addPkt: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo che rimuove un packetId
+    def removeSinglePkt(self, id):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Rimuovo il packet
+            c.execute("DELETE FROM PACKETS WHERE ID=:COD" , {"COD": id} )
+            conn.commit()
+
+        except sqlite3.Error as e:
+
+            # Gestisco l'eccezione
+            if conn:
+                conn.rollback()
+
+            raise Exception("Errore - removePkt: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo che ritorna la lista dei packetId
+    def listPkt(self):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Prelevo la lista di packets
+            c.execute("SELECT ID FROM PACKETS")
+            conn.commit()
+
+            return c.fetchall()
+
+        except sqlite3.Error as e:
+
+            raise Exception("Errore - listPkt: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+    # Metodo che elimina i pacchetti piu' vecchi di 5 minuti e ritorna la lista dei packetId
+    def removeOldPkt(self):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Prelevo la lista di packets
+            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
+            conn.commit()
+
+        except sqlite3.Error as e:
+
+            raise Exception("Errore - returnAndClearPkt: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+
+'''
+
+    # Metodo che aggiunge un packetId
+    def addPkt(self, id):
 
         # Aggiungo il packetId
         self.__pkIdList.append(id)
@@ -368,10 +476,61 @@ class ManageDB:
         else:
             raise Exception("Errore - searchPkt: packetId multipli con stesso id")
 
+'''
+
+'''
+
+# TEST PACKETID CON DATABASE
+manager = ManageDB()
+
+# Inserisco packet
+print("1) Inserisco packet")
+manager.addPkt(1)
+manager.addPkt(2)
+manager.addPkt(3)
+
+print("Packet presenti")
+all_rows = manager.listPkt()
+for row in all_rows:
+    print('{0}'.format(row[0]))
+print("")
 
 
+# Rimuovo packet
+print("2) Rimuovo packet")
+manager.removeSinglePkt(2)
 
-# TEST PACKETID
+print("Packet presenti")
+all_rows = manager.listPkt()
+for row in all_rows:
+    print('{0}'.format(row[0]))
+print("")
+
+# Inserire -1 SECONDS al posto di -5 MINUTES in removeOldPkt
+# Aggiungo una sleep per effettuare un ritardo tra l'inserimento e la rimozione
+
+# Sleep che da esito incerto: possono essere rimossi o meno i packets a seconda dell'esecuzione
+time.sleep(1.3)
+
+# Sleep sufficiente a rimuovere i packets
+# time.sleep(2)
+
+
+# Aggiorno i packets
+print("3) Rimuovo i packets meno recenti")
+manager.removeOldPkt()
+
+print("Packet presenti")
+all_rows = manager.listPkt()
+for row in all_rows:
+    print('{0}'.format(row[0]))
+print("")
+
+'''
+
+
+'''
+# TEST PACKETID CON LISTA
 manager = ManageDB()
 
 # Inserisco packet
@@ -385,7 +544,7 @@ print(manager.listPkt())
 print("")
 
 
-# Inserisco packet
+# Rimuovo packet
 print("2) Rimuovo packet")
 manager.removePkt(3)
 
@@ -416,7 +575,7 @@ print("5) Ricerco un packet non presente")
 print(manager.searchPkt(100))
 print("")
 
-
+'''
 
 
 '''
