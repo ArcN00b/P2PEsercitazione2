@@ -369,7 +369,7 @@ class ManageDB:
             raise Exception("Errore - searchPkt: packetId multipli con stesso id")
 
 
-'''
+
 
 # TEST PACKETID
 manager = ManageDB()
@@ -416,7 +416,7 @@ print("5) Ricerco un packet non presente")
 print(manager.searchPkt(100))
 print("")
 
-'''
+
 
 
 '''
