@@ -3,13 +3,14 @@ import sys
 import asyncore
 import socket
 import threading
+import Utility
 
 class Peer:
 
     def __init__(self,ipv4,ipv6):
         self.ipv4=ipv4
         self.ipv6=ipv6
-        self.port=2680
+        self.port=2400
         self.stop_queue = queue.Queue(1)
         u1 = ReceiveServerIPV4(self.stop_queue,self.ipv4,self.port,(3,self.ipv4,self.port))
         self.server_thread = threading.Thread(target=u1)#crea un thread e gli assa l'handler per il server da far partire
@@ -69,7 +70,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
         msg=self.recv(2048)
         print(msg.decode())
 
-p=Peer('192.168.05','::1')
+p=Peer('172.30.7.1','fc00::7:1')
 while True:
     sel=input("Inserisci qualcosa ")
     print(sel)
