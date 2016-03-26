@@ -1,15 +1,17 @@
 import queue
 import sys
+import os
 import asyncore
 import socket
 import threading
+from ManageDB import *
 
 class Peer:
 
     def __init__(self,ipv4,ipv6):
         self.ipv4=ipv4
         self.ipv6=ipv6
-        self.port=2680
+        self.port=3000
         self.stop_queue = queue.Queue(1)
         u1 = ReceiveServerIPV4(self.stop_queue,self.ipv4,self.port,(3,self.ipv4,self.port))
         self.server_thread = threading.Thread(target=u1)#crea un thread e gli assa l'handler per il server da far partire
@@ -67,9 +69,62 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
     # Questo e il metodo che viene chiamato quando ci sono delle recive
     def handle_read(self):
         msg=self.recv(2048)
-        print(msg.decode())
 
-p=Peer('192.168.05','::1')
+        if msg[:4].decode() == "RETR":
+            peer_md5 = msg[4:].decode()
+            chuncklen = 512;
+
+            obj = db.findFile(md5=peer_md5)
+
+            if len(obj) > 0:
+                # lettura statistiche file
+                statinfo = os.stat(obj[0][0])
+                # imposto lunghezza del file
+                len_file = statinfo.st_size
+                # controllo quante parti va diviso il file
+                num_chunk = len_file // chuncklen
+                if len_file % chuncklen != 0:
+                    num_chunk = num_chunk + 1
+                # pad con 0 davanti
+                num_chunk = str(num_chunk).zfill(6)
+                # costruzione risposta come ARET0000XX
+                send_msg = ("ARET" + num_chunk).encode()
+
+                f = open(obj[0][0],mode="rb")
+                cont = True
+                while cont:
+                    r = f.read(chuncklen)
+                    send_msg = send_msg + str(len(r)).zfill(5).encode()
+                    send_msg = send_msg + r
+                    if len(r) != chuncklen:
+                        cont = False
+
+                f.close()
+                # ciclo di invio per numero di chunck
+                cont = True
+                while cont:
+                    mess = send_msg[:2048]  #invio di 1024 alla volta
+                    self.send(mess)
+                    send_msg = send_msg[2048:]  #passo ai 2048 successivi
+                    if len(mess) < 2048:
+                        cont = False
+
+
+        elif(msg[:4].decode() == "QUER"):
+            print("ricevuto una query")
+
+        else:
+            print("ricevuto altro")
+
+
+db = ManageDB()
+db.addFile("1"*32, "live brixton.jpg")
+
+# i = db.findFile(md5="1"*32)
+# print("valore i: "+i[0][0])
+
+p=Peer('127.0.0.1','::1')
+
 while True:
     sel=input("Inserisci qualcosa ")
     print(sel)
