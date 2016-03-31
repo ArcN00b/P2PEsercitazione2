@@ -18,5 +18,5 @@ while True:
     sock.connect((a, 2400))
     sock.sendall((b+sys.argv[1]).encode())
 
-    time.sleep(2)
+    time.sleep(random.randint(1,5))
     sock.close()

@@ -4,6 +4,7 @@ import asyncore
 import socket
 import threading
 import Utility
+import ManageDB
 
 class Peer:
 
@@ -68,10 +69,74 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
     # Questo e il metodo che viene chiamato quando ci sono delle recive
     def handle_read(self):
         msg=self.recv(2048)
-        print(msg.decode())
+        type=msg[0:4]
+        database=ManageDB()
 
-p=Peer('172.30.7.1','fc00::7:1')
+        if type=="QUER":
+            #TODO è meglio mettere tutta l'esecuzione del metodo in un thread
+            lista=[]
+            msgRet='AQUE'
+            pkID=msg[4:20]
+            ipDest=msg[20:75]
+            portDest=msg[75:80]
+            ttl=msg[80:82]
+            file=msg[82:]
+
+            #TODO eseguire metodo che controlla se è presente un packetId nel database
+            #ad esempio database.checkId(pkId)
+
+            #Esegue la risposta ad una query
+            msgRet=msgRet+pkID
+            ip=Utility.MY_IPV4+'|'+Utility.MY_IPV6
+            port='{:0>5}'.format(Utility.PORT)
+            msgRet=msgRet+ip+port
+            l=database.findMd5(file)
+            for i in range(0,len(l)):
+                f=database.findFile(l[i][0])
+                r=msgRet
+                r=r+l[i][0]+f
+                t1 = threading.Thread(target=Utility.sendMessage(r,ipDest,portDest))
+                t1.start()
+                lista.append(t1)
+
+            #controllo se devo divulgare la query
+            if int(ttl)>1:
+                Utility.sendAllNear(msg,database.listClient())
+
+            for i in range(0,len(lista)):
+            	lista[i].join()
+
+
+
+
+p=Peer('localhost','::1')
+database=ManageDB()
 while True:
-    sel=input("Inserisci qualcosa ")
-    print(sel)
+    print("1. Ricerca")
+    print("2. Aggiorna Vicini")
+    print("3. Aggiungi File")
+    print("4. Rimuovi File")
+    print("5. Visualizza File")
+    print("6. Visualizza Vicini")
+    print(" ")
+    sel=input("Inserisci il numero del comando da eseguire ")
+    if sel==1: #TODO Eseguire una ricerca
+        print(sel)
+    elif sel==2:
+        #TODO Aggiornare i near
+        print(sel)
+    elif sel==3:        #TODO Aggiungere un file al database
+        print(sel)
+    elif sel==4:        #TODO Rimozione di un file dal database
+        print(sel)
+    elif sel==5:        #TODO visualizza tutti i file del database
+        print(sel)
+    elif sel==6:
+        lista=database.listClient()
+        print(" ")
+        print("IP e PORTA")
+        for i in range(0,len(lista)):
+            print("IP"+i+" "+lista[i][0]+" "+lista[i][1])
+    else:
+        sel=input("Commando Errato, attesa nuovo comando ")
 
