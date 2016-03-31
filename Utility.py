@@ -20,8 +20,7 @@ class Utility:
 
     # Metodo per generare l'md5 di un file, va passato il percorso assoluto
     @staticmethod
-    def generateMd5():
-        path="/home/flavio/Scrivania/pippo.txt"
+    def generateMd5(path="/home/test.txt"):
         f=open(path)
         r=f.read(512)
         s=r
