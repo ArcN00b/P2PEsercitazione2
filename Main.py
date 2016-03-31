@@ -5,13 +5,15 @@ import asyncore
 import socket
 import threading
 from ManageDB import *
+from Parser import *
+from Utility import *
 
 class Peer:
 
     def __init__(self,ipv4,ipv6):
         self.ipv4=ipv4
         self.ipv6=ipv6
-        self.port=3000
+        self.port=Utility.generatePort()
         self.stop_queue = queue.Queue(1)
         u1 = ReceiveServerIPV4(self.stop_queue,self.ipv4,self.port,(3,self.ipv4,self.port))
         self.server_thread = threading.Thread(target=u1)#crea un thread e gli assa l'handler per il server da far partire
@@ -68,13 +70,17 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
     # Questo e il metodo che viene chiamato quando ci sono delle recive
     def handle_read(self):
-        msg=self.recv(2048)
 
-        if msg[:4].decode() == "RETR":
-            peer_md5 = msg[4:].decode()
+        # Ricevo i dati dal socket ed eseguo il parsing
+        data = self.recv(2048)
+        command, fields = Parser.parse(data)
+
+        if command == "RETR":
+
+            # Imposto la lunghezza dei chunk e ottengo il nome del file a cui corrisponde l'md5
             chuncklen = 512;
-
-            obj = db.findFile(md5=peer_md5)
+            peer_md5 = fields[0]
+            obj = db.findFile(peer_md5)
 
             if len(obj) > 0:
                 # lettura statistiche file
@@ -88,26 +94,29 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 # pad con 0 davanti
                 num_chunk = str(num_chunk).zfill(6)
                 # costruzione risposta come ARET0000XX
-                send_msg = ("ARET" + num_chunk).encode()
+                mess = ('ARET' + num_chunk).encode()
+                self.send(mess)
 
-                f = open(obj[0][0],mode="rb")
-                cont = True
-                while cont:
-                    r = f.read(chuncklen)
-                    send_msg = send_msg + str(len(r)).zfill(5).encode()
-                    send_msg = send_msg + r
-                    if len(r) != chuncklen:
-                        cont = False
+                # Apro il file in lettura e ne leggo una parte
+                f = open(obj[0][0], 'rb')
+                r = f.read(chuncklen)
 
-                f.close()
-                # ciclo di invio per numero di chunck
-                cont = True
-                while cont:
-                    mess = send_msg[:2048]  #invio di 1024 alla volta
+                # Finchè il file non termina
+                while len(r) > 0:
+
+                    # Invio la lunghezza del chunk
+                    mess = str(len(r)).zfill(5).encode()
                     self.send(mess)
-                    send_msg = send_msg[2048:]  #passo ai 2048 successivi
-                    if len(mess) < 2048:
-                        cont = False
+
+                    # Invio il chunk
+                    mess = r
+                    self.send(mess)
+
+                    # Proseguo la lettura del file
+                    r = f.read(chuncklen)
+
+                # Chiudo il file
+                f.close()
 
 
         elif(msg[:4].decode() == "QUER"):
