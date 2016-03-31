@@ -46,7 +46,7 @@ class Parser:
         elif command == 'RETR':
             fields[0] = data[-32:]    # FileMD5[32B]
 
-        # Se il comando è FIND suddivido data in questo modo
+        # Se il comando è ARET suddivido data in questo modo
         elif command == 'ARET':
             fields[0] = data[4:10]    # nChunk[6B]
 
@@ -73,37 +73,37 @@ class Parser:
             error = True
             print('Errore, comando (' + command + ') non riconosciuto \n')
 
-        # Se il comando è LOGI eseguo questi controlli tramite regex
+        # Se il comando è QUER eseguo questi controlli tramite regex
         if command == 'QUER' and not error:
             p = re.compile('[\dA-Z]{16}(\d{3}\.){3}\d{3}\|([\da-fA-F]{4}\:){7}[\da-fA-F]{4}\d{5}\d{2}[\da-zA-Z\.\ ]{20}$')
             if p.search(data) == None:
                 error = True
 
-        # Se il comando è ADDF eseguo questi controlli tramite regex
+        # Se il comando è AQUE eseguo questi controlli tramite regex
         elif command == 'AQUE' and not error:
             p = re.compile('[\dA-Z]{16}(\d{3}\.){3}\d{3}\|([\da-fA-F]{4}\:){7}[\da-fA-F]{4}\d{5}[\da-zA-Z]{32}[\da-zA-Z\.\ ]{100}$')
             if p.search(data) == None:
                 error = True
 
-        # Se il comando è DELF eseguo questi controlli tramite regex
+        # Se il comando è NEAR eseguo questi controlli tramite regex
         elif command == 'NEAR' and not error:
             p = re.compile('[\dA-Z]{16}(\d{3}\.){3}\d{3}\|([\da-fA-F]{4}\:){7}[\da-fA-F]{4}\d{5}\d{2}$')
             if p.search(data) == None:
                 error = True
 
-        # Se il comando è FIND eseguo questi controlli tramite regex
+        # Se il comando è ANEA eseguo questi controlli tramite regex
         elif command == 'ANEA' and not error:
             p = re.compile('[\dA-Z]{16}(\d{3}\.){3}\d{3}\|([\da-fA-F]{4}\:){7}[\da-fA-F]{4}\d{5}$')
             if p.search(data) == None:
                 error = True
 
-        # Se il comando è DREG eseguo questi controlli tramite regex
+        # Se il comando è RETR eseguo questi controlli tramite regex
         elif command == 'RETR' and not error:
             p = re.compile('[\da-zA-Z]{32}$')
             if p.search(data) == None:
                 error = True
 
-        # Se il comando è LOGO suddivido data in questo modo
+        # Se il comando è ARET suddivido data in questo modo
         elif command == 'ARET' and not error:
             p = re.compile('\d{6}')
             if p.search(data) == None:
