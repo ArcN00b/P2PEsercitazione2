@@ -438,9 +438,41 @@ class ManageDB:
             if conn:
                 conn.close()
 
+    # Metodo che ricerca un packetId, ritorna True se e' presente, altrimenti False
+    def checkPkt(self, id):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Prelevo la lista di packets
+            c.execute("SELECT COUNT(ID) FROM PACKETS WHERE ID=:COD" , {"COD": id} )
+            conn.commit()
+
+            count  = c.fetchall()
+
+            # Ritorno True se il packet e' presente, altrimenti False
+            if(count[0][0] == 1):
+                return True
+            elif(count[0][0] == 0):
+                return False
+            else:
+                raise Exception("Errore - checkPkt: packetId multipli con stesso id")
+
+        except sqlite3.Error as e:
+
+            raise Exception("Errore - checkPkt: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
+
 
 '''
-
     # Metodo che aggiunge un packetId
     def addPkt(self, id):
 
@@ -478,6 +510,7 @@ class ManageDB:
 
 '''
 
+
 '''
 
 # TEST PACKETID CON DATABASE
@@ -494,6 +527,14 @@ all_rows = manager.listPkt()
 for row in all_rows:
     print('{0}'.format(row[0]))
 print("")
+
+# Cerco un packet
+print("Ricerco un packet")
+
+if (manager.checkPkt(1)):
+    print("True: packet presente")
+else:
+    print("False: packet non presente")
 
 
 # Rimuovo packet
