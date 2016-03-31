@@ -12,10 +12,11 @@ class Peer:
         self.ipv4=ipv4
         self.ipv6=ipv6
         self.port=2400
-        self.stop_queue = queue.Queue(1)
-        u1 = ReceiveServerIPV4(self.stop_queue,self.ipv4,self.port,(3,self.ipv4,self.port))
+        self.stop_queueIpv4 = queue.Queue(1)
+        u1 = ReceiveServerIPV4(self.stop_queueIpv4,self.ipv4,self.port,(3,self.ipv4,self.port))
         self.server_thread = threading.Thread(target=u1)#crea un thread e gli assa l'handler per il server da far partire
-        u2 = ReceiveServerIPV6(self.stop_queue,self.ipv6,self.port,(3,self.ipv6,self.port))
+        self.stop_queueIpv6 = queue.Queue(1)
+        u2 = ReceiveServerIPV6(self.stop_queueIpv6,self.ipv6,self.port,(3,self.ipv6,self.port))
         self.server_threadIP6 = threading.Thread(target=u2)
         self.server_thread.start()#parte
         self.server_threadIP6.start()
