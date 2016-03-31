@@ -13,7 +13,7 @@ class Peer:
     def __init__(self,ipv4,ipv6):
         self.ipv4=ipv4
         self.ipv6=ipv6
-        self.port=Utility.generatePort()
+        self.port=3000                      # da sostituire con Utility.generatePort()
         self.stop_queue = queue.Queue(1)
         u1 = ReceiveServerIPV4(self.stop_queue,self.ipv4,self.port,(3,self.ipv4,self.port))
         self.server_thread = threading.Thread(target=u1)#crea un thread e gli assa l'handler per il server da far partire
@@ -73,7 +73,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
         # Ricevo i dati dal socket ed eseguo il parsing
         data = self.recv(2048)
-        command, fields = Parser.parse(data)
+        command, fields = Parser.parse(data.decode())
 
         if command == "RETR":
 
@@ -119,7 +119,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 f.close()
 
 
-        elif(msg[:4].decode() == "QUER"):
+        elif(command == "QUER"):
             print("ricevuto una query")
 
         else:
