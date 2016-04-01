@@ -122,6 +122,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
             # TODO è meglio mettere tutta l'esecuzione del metodo in un thread
             lista = []
             msgRet = 'AQUE'
+            # Prendo i campi del messaggio ricevuto
             pkID = fields[0]
             ipDest = fields[1]
             portDest = fields[2]
@@ -208,7 +209,7 @@ while True:
     print("6. Visualizza Vicini")
     print(" ")
     sel=input("Inserisci il numero del comando da eseguire ")
-    if sel==1:
+    if sel=="1":
         sel=input("Inserisci stringa da ricercare ")
         while len(sel)>20:
             sel=input("Stringa Troppo Lunga,reinserisci ")
@@ -228,7 +229,7 @@ while True:
         datiPeer=listFindFile[numFindFile-1]
         #TODO chiamata al metodo per eseguire il download
 
-    elif sel==2:
+    elif sel=="2":
         pktID=Utility.generateId(16)
         ip=Utility.MY_IPV4+'|'+Utility.MY_IPV6
         port='{:0>5}'.format(Utility.PORT)
@@ -241,13 +242,13 @@ while True:
         t1.start()
         t1.join()
 
-    elif sel==3:        #TODO Aggiungere un file al database
+    elif sel=="3":        #TODO Aggiungere un file al database
         print(sel)
-    elif sel==4:        #TODO Rimozione di un file dal database
+    elif sel=="4":        #TODO Rimozione di un file dal database
         print(sel)
-    elif sel==5:        #TODO visualizza tutti i file del database
+    elif sel=="5":        #TODO visualizza tutti i file del database
         print(sel)
-    elif sel==6:
+    elif sel=="6":
         lista=database.listClient()
         print(" ")
         print("IP e PORTA")
