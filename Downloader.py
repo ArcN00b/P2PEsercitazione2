@@ -33,5 +33,5 @@ if recv_mess[:4] == "ARET":
         chunklen = int(sock.recv(5).decode())       # Leggo la lunghezza del chunk
         buffer = sock.recv(chunklen)                # Leggo il contenuto del chunk
         f.write(buffer)                             # Scrivo il contenuto del chunk nel file
-
+        count_chunk += 1                            # Aggiorno il contatore
     f.close()
