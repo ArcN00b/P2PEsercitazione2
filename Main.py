@@ -27,7 +27,6 @@ class Peer:
         self.server_thread.start()#parte
         self.server_threadIP6.start()
 
-
 class ReceiveServerIPV4(asyncore.dispatcher):
     """Questa classe rappresenta un server per accettare i pacchetti
     degli altri peer."""
@@ -148,7 +147,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     f = database.findFile(l[i][0])
                     r = msgRet
                     r = r + l[i][0] + f
-                    t1 = threading.Thread(target=Utility.sendMessage(r, ipDest, portDest))
+                    t1 = Sender(r, ipDest, portDest)
                     t1.start()
                     lista.append(t1)
 
@@ -181,7 +180,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 database.addPkt(fields[0])
                 ttl='{:0>2}'.format(int(fields[3])-1)
                 msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
-                t1 = threading.Thread(target=Utility.sendAllNear(msg, database.listClient()))
+                t1 = SenderAll(msg, database.listClient())
                 t1.start()
                 t1.join()
 
@@ -231,7 +230,7 @@ while True:
         msg="QUER"+pktID+ip+port+ttl+search
         database.addPkt(pktID)
         numFindFile = 0
-        t1 = threading.Thread(target=Utility.sendAllNear(msg, database.listClient()))
+        t1 = SenderAll(msg, database.listClient())
         t1.start()
         t1.join()
 
@@ -251,7 +250,7 @@ while True:
             i = int(input("Scegli il file da scaricare oppure no")) - 1
 
         # TODO chiamata al metodo per eseguire il download
-        t1 = threading.Thread(target=Utility.download(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4]))
+        t1 = Downloader(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4])
         t1.start()
         t1.join()
 
@@ -264,7 +263,7 @@ while True:
         database.addPkt(pktID)
         listaNear=database.listClient()
         database.removeAllClient()
-        t1 = threading.Thread(target=Utility.sendAllNear(msg, listaNear))
+        t1 = SenderAll(msg, listaNear)
         t1.start()
         t1.join()
 

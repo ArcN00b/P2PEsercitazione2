@@ -52,7 +52,7 @@ class Utility:
         t = stringa.find('|')
         if t != -1:
             ipv4 = stringa[0:t]
-            ipv6 = stringa[t:]
+            ipv6 = stringa[t + 1:]
             return ipv4, ipv6
         else:
             return '', ''
@@ -120,3 +120,51 @@ class Utility:
                 f.write(buffer)                             # Scrivo il contenuto del chunk nel file
                 count_chunk += 1                            # Aggiorno il contatore
             f.close()
+
+class Sender:
+    # Costruttore che inizializza gli attributi del Worker
+    def __init__(self, messaggio, ip, port):
+        # definizione thread del client
+        threading.Thread.__init__(self)
+        self.messaggio = messaggio
+        self.ip = ip
+        self.port = port
+
+    # Funzione che lancia il worker e controlla la chiusura improvvisa
+    def run(self):
+        try:
+            Utility.sendAllNear(self.messaggio, self.ip, self.port)
+        except Exception as e:
+            print("errore: ", e)
+
+class SenderAll:
+    # Costruttore che inizializza gli attributi del Worker
+    def __init__(self, messaggio, listaNear):
+        # definizione thread del client
+        threading.Thread.__init__(self)
+        self.messaggio = messaggio
+        self.listanear = listaNear
+
+    # Funzione che lancia il worker e controlla la chiusura improvvisa
+    def run(self):
+        try:
+            Utility.sendAllNear(self.messaggio, self.listaNear)
+        except Exception as e:
+            print("errore: ", e)
+
+class Downloader:
+    # Costruttore che inizializza gli attributi del Worker
+    def __init__(self, ipp2p, pp2p, md5, name):
+        # definizione thread del client
+        threading.Thread.__init__(self)
+        self.ipp2p = ipp2p
+        self.pp2p = pp2p
+        self.md5 = md5
+        self.name = name
+
+    # Funzione che lancia il worker e controlla la chiusura improvvisa
+    def run(self):
+        try:
+            Utility.download(self.ipp2p, self.pp2p, self.md5, self.name)
+        except Exception as e:
+            print("errore: ", e)
