@@ -194,10 +194,10 @@ numFindFile=0
 listFindFile=[]
 database = ManageDB()
 database.addFile("1"*32, "live brixton.jpg")
+pathDir="/home/riccardo/Scrivania/FileProgetto/"
 
 # i = db.findFile(md5="1"*32)
 # print("valore i: "+i[0][0])
-
 p=Peer('127.0.0.1','::1')
 
 while True:
@@ -243,7 +243,15 @@ while True:
         t1.join()
 
     elif sel=="3":        #TODO Aggiungere un file al database
-        print(sel)
+
+        #Ottengo la lista dei file dalla cartella corrente
+        lst = os.listdir(pathDir)
+
+        #Inserisco i file nel database
+        for file in lst:
+            database.addFile(Utility.generateMd5(pathDir+file), file)
+        print("Operazione completata")
+
     elif sel=="4":        #TODO Rimozione di un file dal database
         print(sel)
     elif sel=="5":        #TODO visualizza tutti i file del database
