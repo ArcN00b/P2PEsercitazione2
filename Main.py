@@ -77,11 +77,10 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
         command, fields = Parser.parse(data.decode())
 
         if command == "RETR":
-
             # Imposto la lunghezza dei chunk e ottengo il nome del file a cui corrisponde l'md5
             chuncklen = 512;
             peer_md5 = fields[0]
-            obj = db.findFile(peer_md5)
+            obj = database.findFile(peer_md5)
 
             if len(obj) > 0:
                 # lettura statistiche file
@@ -115,7 +114,6 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
                     # Proseguo la lettura del file
                     r = f.read(chuncklen)
-
                 # Chiudo il file
                 f.close()
 
@@ -124,11 +122,11 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
             # TODO è meglio mettere tutta l'esecuzione del metodo in un thread
             lista = []
             msgRet = 'AQUE'
-            pkID = msg[4:20]
-            ipDest = msg[20:75]
-            portDest = msg[75:80]
-            ttl = msg[80:82]
-            file = msg[82:]
+            pkID = fields[0]
+            ipDest = fields[1]
+            portDest = fields[2]
+            ttl = fields[3]
+            file = fields[4]
 
             # TODO eseguire metodo che controlla se è presente un packetId nel database
             # ad esempio database.checkId(pkId)
@@ -149,7 +147,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
             # controllo se devo divulgare la query
             if int(ttl) > 1:
-                Utility.sendAllNear(msg, database.listClient())
+                Utility.sendAllNear(data, database.listClient())
 
             for i in range(0, len(lista)):
                 lista[i].join()
@@ -158,8 +156,8 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
             print("ricevuto altro")
 
 
-db = ManageDB()
-db.addFile("1"*32, "live brixton.jpg")
+database = ManageDB()
+database.addFile("1"*32, "live brixton.jpg")
 
 # i = db.findFile(md5="1"*32)
 # print("valore i: "+i[0][0])
