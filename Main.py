@@ -227,13 +227,14 @@ while True:
 
         # Visualizzo le possibili scelte
         print("Scelta  PEER                                        MD5                       Nome")
+        print("0 Non scaricare nulla")
         for i in range(0,numFindFile):
-            print(str(i) + "   " + listFindFile[i][1] + " " + listFindFile[i][3] + " " + listFindFile[i][4])
+            print(str(i + 1) + "   " + listFindFile[i][1] + " " + listFindFile[i][3] + " " + listFindFile[i][4])
 
         # Chiedo quale file scaricare
         i = -1
-        while i not in range(0, numFindFile):
-            i = int(input("Scegli il file da scaricare"))
+        while i not in range(0, numFindFile +1):
+            i = int(input("Scegli il file da scaricare oppure no")) - 1
 
         # TODO chiamata al metodo per eseguire il download
         t1 = threading.Thread(target=Utility.download(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4]))
