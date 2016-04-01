@@ -191,6 +191,33 @@ class ManageDB:
             if conn:
                 conn.close()
 
+    # Metodo che elimina tutti i peer
+    def removeAllClient(self):
+
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Rimuovo tutti i peer
+            c.execute("DELETE FROM CLIENTS")
+            conn.commit()
+
+        except sqlite3.Error as e:
+
+            # Gestisco l'eccezione
+            if conn:
+                conn.rollback()
+
+            raise Exception("Errore - removeAllClient: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
     # Metodo per ricercare il nome del file tramite md5
     def findFile(self,md5):
         try:
@@ -348,7 +375,8 @@ class ManageDB:
             conn = sqlite3.connect("data.db")
             c = conn.cursor()
 
-            # Aggiungo il packet
+            # Rimuovo i packets meno recenti ed aggiungo il packet
+            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
             c.execute("INSERT INTO PACKETS (ID, DATE) VALUES ( ?, DATETIME('NOW'))" , (id,))
             conn.commit()
 
@@ -374,8 +402,9 @@ class ManageDB:
             conn = sqlite3.connect("data.db")
             c = conn.cursor()
 
-            # Rimuovo il packet
+            # Rimuovo il packet ed elimino i packets meno recenti
             c.execute("DELETE FROM PACKETS WHERE ID=:COD" , {"COD": id} )
+            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
             conn.commit()
 
         except sqlite3.Error as e:
@@ -384,7 +413,7 @@ class ManageDB:
             if conn:
                 conn.rollback()
 
-            raise Exception("Errore - removePkt: %s:" % e.args[0])
+            raise Exception("Errore - removeSinglePkt: %s:" % e.args[0])
 
         finally:
 
@@ -400,7 +429,8 @@ class ManageDB:
             conn = sqlite3.connect("data.db")
             c = conn.cursor()
 
-            # Prelevo la lista di packets
+            # Elimino i packets meno recenti e prelevo la lista di packets
+            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
             c.execute("SELECT ID FROM PACKETS")
             conn.commit()
 
@@ -424,13 +454,13 @@ class ManageDB:
             conn = sqlite3.connect("data.db")
             c = conn.cursor()
 
-            # Prelevo la lista di packets
+            # Rimuovo i packets meno recenti
             c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
             conn.commit()
 
         except sqlite3.Error as e:
 
-            raise Exception("Errore - returnAndClearPkt: %s:" % e.args[0])
+            raise Exception("Errore - removeOldPkt: %s:" % e.args[0])
 
         finally:
 
@@ -446,7 +476,8 @@ class ManageDB:
             conn = sqlite3.connect("data.db")
             c = conn.cursor()
 
-            # Prelevo la lista di packets
+            # Elimino i packets meno recenti e verifico se e' presente il packet
+            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
             c.execute("SELECT COUNT(ID) FROM PACKETS WHERE ID=:COD" , {"COD": id} )
             conn.commit()
 
@@ -635,6 +666,18 @@ all_rows = manager.listClient()
 for row in all_rows:
     print('{0} : {1}'.format(row[0], row[1]))
 print("")
+
+print("Rimuovo tutti i peer")
+manager.removeAllClient()
+print("Peer presenti")
+all_rows = manager.listClient()
+for row in all_rows:
+    print('{0} : {1}'.format(row[0], row[1]))
+print("")
+manager.addClient("1.1.1.1","1")
+manager.addClient("1.1.1.1","2")
+manager.addClient("2.2.2.2","2")
+
 
 
 # Rimozione peer

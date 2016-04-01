@@ -135,6 +135,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
             # Controllo se il packetId è già presente se è presente non rispondo alla richiesta
             # E non la rispedisco
+            global database
             if database.checkPkt(pkID)==False:
                 database.addPkt(pkID)
                 # Esegue la risposta ad una query
@@ -161,8 +162,11 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     lista[i].join()
 
         elif command=="AQUE":
+            global database
             if database.checkPkt(fields[0])==True:
-                numFindFile += 1
+                global numFindFile
+                numFindFile=numFindFile+1
+                global listFindFile
                 listFindFile.append(fields)
                 print("-----")
                 print("Peer "+numFindFile)
@@ -172,6 +176,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 print("-----")
 
         elif command=="NEAR":
+            global database
             if database.checkPkt(fields[0])==False and int(fields[3])>1:
                 database.addPkt(fields[0])
                 ttl='{:0>2}'.format(int(fields[3])-1)
@@ -181,20 +186,28 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 t1.join()
 
         elif command=="ANEA":
+            global database
             if database.checkPkt(fields[0])==True:
                 database.addClient(fields[1],fields[2])
 
         else:
             print("ricevuto altro")
 
+
 numFindFile=0
 listFindFile=[]
 database = ManageDB()
-pathDir="/home/simone/Scaricati/pycharm-community-2016.1/bin"
+#database.addFile("1"*32, "live brixton.jpg")
 
 # i = db.findFile(md5="1"*32)
 # print("valore i: "+i[0][0])
+
 p=Peer('127.0.0.1','::1')
+
+pathDir="/home/riccardo/Scrivania/FileProgetto/"
+#if not os.path.exists(pathDir):
+#    os.makedirs(pathDir)
+
 
 while True:
     print("1. Ricerca")
