@@ -77,6 +77,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
         # Ricevo i dati dal socket ed eseguo il parsing
         data = self.recv(2048)
+        print('ricevuto: '+data.decode())
         command, fields = Parser.parse(data.decode())
 
         if command == "RETR":
@@ -134,7 +135,6 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
             # Controllo se il packetId è già presente se è presente non rispondo alla richiesta
             # E non la rispedisco
-            global database
             if database.checkPkt(pkID)==False:
                 database.addPkt(pkID)
                 # Esegue la risposta ad una query
@@ -142,30 +142,24 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
                 port = '{:0>5}'.format(Utility.PORT)
                 msgRet = msgRet + ip + port
-                l = database.findMd5(file)
+                l = database.findMd5(file.rstrip(' '))
                 for i in range(0, len(l)):
                     f = database.findFile(l[i][0])
                     r = msgRet
-                    r = r + l[i][0] + f
+                    r = r + l[i][0] + f[0][0]
                     t1 = Sender(r, ipDest, portDest)
-                    t1.start()
-                    lista.append(t1)
+                    t1.run()
 
                 # controllo se devo divulgare la query
                 if int(ttl) > 1:
                     ttl='{:0>2}'.format(int(ttl)-1)
                     msg="QUER"+pkID+ipDest+portDest+ttl+file
-                    Utility.sendAllNear(msg, database.listClient())
-
-                for i in range(0, len(lista)):
-                    lista[i].join()
+                    t2 = SenderAll(msg, database.listClient())
+                    t2.run()
 
         elif command=="AQUE":
-            global database
             if database.checkPkt(fields[0])==True:
-                global numFindFile
-                numFindFile=numFindFile+1
-                global listFindFile
+                numFindFile+=1
                 listFindFile.append(fields)
                 print("-----")
                 print("Peer "+numFindFile)
@@ -175,21 +169,16 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 print("-----")
 
         elif command=="NEAR":
-            global database
             if database.checkPkt(fields[0])==False and int(fields[3])>1:
                 database.addPkt(fields[0])
                 ttl='{:0>2}'.format(int(fields[3])-1)
                 msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
                 t1 = SenderAll(msg, database.listClient())
-                t1.start()
+                t1.run()
 
         elif command=="ANEA":
-            global database
             if database.checkPkt(fields[0])==True:
                 database.addClient(fields[1],fields[2])
-
-        else:
-            print("ricevuto altro")
 
 
 numFindFile=0
@@ -208,6 +197,17 @@ pathDir="/home/simone/Immagini/"
 
 
 while True:
+    # Ottengo la lista dei file dalla cartella corrente
+    lst = os.listdir(pathDir)
+
+    # Inserisco i file nel database
+    if len(lst) > 0:
+        for file in lst:
+            database.addFile(Utility.generateMd5(pathDir + file),
+                             file.ljust(100, ' '))  # Inserisco nel database il nome con gli spazi
+        print("Operazione completata")
+    else:
+        print("Non ci sono file nella directory")
     database.addClient("192.168.000.010|FC00:0000:0000:0000:0000:0000:0007:0004", "02000")
     print("1. Ricerca")
     print("2. Aggiorna Vicini")
@@ -230,7 +230,7 @@ while True:
         database.addPkt(pktID)
         numFindFile = 0
         t1 = SenderAll(msg, database.listClient())
-        t1.start()
+        t1.run()
 
         # Ogni 3 secondi controllo di avere risposte
         while numFindFile == 0:
@@ -249,7 +249,7 @@ while True:
 
         # TODO chiamata al metodo per eseguire il download
         t1 = Downloader(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4])
-        t1.start()
+        t1.run()
 
     elif sel=="2":
         pktID=Utility.generateId(16)
@@ -261,7 +261,7 @@ while True:
         listaNear=database.listClient()
         database.removeAllClient()
         t1 = SenderAll(msg, listaNear)
-        t1.start()
+        t1.run()
 
     elif sel=="3":        #TODO Aggiungere tutti i file nel database
 
