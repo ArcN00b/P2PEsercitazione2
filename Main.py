@@ -202,14 +202,15 @@ database = ManageDB()
 # i = db.findFile(md5="1"*32)
 # print("valore i: "+i[0][0])
 
-p=Peer('127.0.0.1','::1')
+p=Peer('192.168.0.9','::1')
 
-pathDir="/home/riccardo/Scrivania/FileProgetto/"
+pathDir="/home/simone/Immagini/"
 #if not os.path.exists(pathDir):
 #    os.makedirs(pathDir)
 
 
 while True:
+    database.addClient("192.168.000.010|FC00:0000:0000:0000:0000:0000:0007:0004", "02000")
     print("1. Ricerca")
     print("2. Aggiorna Vicini")
     print("3. Aggiungi File")

@@ -6,7 +6,7 @@ import threading
 
 class Utility:
 
-    MY_IPV4='127.0.0.1'
+    MY_IPV4='192.168.0.9'
     MY_IPV6='::1'
     PORT=3000
 
@@ -61,7 +61,7 @@ class Utility:
     # Apre e chiude la connessione velocemente
     @staticmethod
     def sendMessagge(messaggio, ip, porta):
-        r = random.randrange(0, 100)
+        r = 0 #random.randrange(0, 100)
         ipv4, ipv6 = Utility.getIp(ip)
         if r < 50:
             a = ipv4
@@ -90,7 +90,7 @@ class Utility:
     @staticmethod
     def download(ipp2p, pp2p, md5, name):
 
-        r=random.randrange(0,100)
+        r=0 #random.randrange(0,100)
         ipv4, ipv6 = Utility.getIp(ipp2p)
         if r < 50:
             ind = ipv4
