@@ -193,8 +193,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 numFindFile=0
 listFindFile=[]
 database = ManageDB()
-database.addFile("1"*32, "live brixton.jpg")
-pathDir="/home/riccardo/Scrivania/FileProgetto/"
+pathDir="/home/simone/Scaricati/pycharm-community-2016.1/bin"
 
 # i = db.findFile(md5="1"*32)
 # print("valore i: "+i[0][0])
@@ -242,20 +241,54 @@ while True:
         t1.start()
         t1.join()
 
-    elif sel=="3":        #TODO Aggiungere un file al database
+    elif sel=="3":        #TODO Aggiungere tutti i file nel database
 
         #Ottengo la lista dei file dalla cartella corrente
         lst = os.listdir(pathDir)
 
         #Inserisco i file nel database
-        for file in lst:
-            database.addFile(Utility.generateMd5(pathDir+file), file)
-        print("Operazione completata")
+        if len(lst) > 0:
+            for file in lst:
+                database.addFile(Utility.generateMd5(pathDir+file), file)
+            print("Operazione completata")
+        else:
+            print("Non ci sono file nella directory")
 
     elif sel=="4":        #TODO Rimozione di un file dal database
-        print(sel)
+
+        # Ottengo la lista dei file dal database
+        lst = database.listFile()
+
+        # Visualizzo la lista dei file
+        if len(lst) > 0:
+            print("Scelta  MD5                                      Nome")
+            for i in range(0,len(lst)):
+                print(i + " " + lst[i][0] + " " + lst[i][1])
+
+            # Chiedo quale file rimuovere
+            i = -1
+            while i not in range(0, len(lst)):
+                i = int(input("Scegli il file da cancellare"))
+
+            # Elimino il file
+            database.removeFile(lst[i][0])
+            print("Operazione completata")
+        else:
+            print("Non ci sono file nella nel database")
+
     elif sel=="5":        #TODO visualizza tutti i file del database
-        print(sel)
+
+        # Ottengo la lista dei file dal database
+        lst = database.listFile()
+
+        # Visualizzo la lista dei file
+        if len(lst) > 0:
+            print("MD5                                      Nome")
+            for file in lst:
+                print(file[0] + " " + file[1])
+        else:
+            print("Non ci sono file nella nel database")
+
     elif sel=="6":
         lista=database.listClient()
         print(" ")
