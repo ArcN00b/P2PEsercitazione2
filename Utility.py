@@ -80,12 +80,7 @@ class Utility:
     def sendAllNear(messaggio, listaNear):
         lista = []
         for i in range(0, len(listaNear)):
-            t1 = threading.Thread(target=Utility.sendMessage(messaggio, listaNear[i][0], listaNear[i][1]))
-            t1.start()
-            lista.append(t1)
-
-        for i in range(0, len(lista)):
-            lista[i].join()
+            Utility.sendMessage(messaggio, listaNear[i][0], listaNear[i][1])
 
     @staticmethod
     def download(ipp2p, pp2p, md5, name):
@@ -131,7 +126,7 @@ class Sender:
         self.port = port
 
     # Funzione che lancia il worker e controlla la chiusura improvvisa
-    def run(self):
+    def start(self):
         try:
             Utility.sendAllNear(self.messaggio, self.ip, self.port)
         except Exception as e:
@@ -146,7 +141,7 @@ class SenderAll:
         self.listanear = listaNear
 
     # Funzione che lancia il worker e controlla la chiusura improvvisa
-    def run(self):
+    def start(self):
         try:
             Utility.sendAllNear(self.messaggio, self.listaNear)
         except Exception as e:
@@ -163,7 +158,7 @@ class Downloader:
         self.name = name
 
     # Funzione che lancia il worker e controlla la chiusura improvvisa
-    def run(self):
+    def start(self):
         try:
             Utility.download(self.ipp2p, self.pp2p, self.md5, self.name)
         except Exception as e:

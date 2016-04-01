@@ -182,7 +182,6 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
                 t1 = SenderAll(msg, database.listClient())
                 t1.start()
-                t1.join()
 
         elif command=="ANEA":
             global database
@@ -232,7 +231,6 @@ while True:
         numFindFile = 0
         t1 = SenderAll(msg, database.listClient())
         t1.start()
-        t1.join()
 
         # Ogni 3 secondi controllo di avere risposte
         while numFindFile == 0:
@@ -252,7 +250,6 @@ while True:
         # TODO chiamata al metodo per eseguire il download
         t1 = Downloader(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4])
         t1.start()
-        t1.join()
 
     elif sel=="2":
         pktID=Utility.generateId(16)
@@ -265,7 +262,6 @@ while True:
         database.removeAllClient()
         t1 = SenderAll(msg, listaNear)
         t1.start()
-        t1.join()
 
     elif sel=="3":        #TODO Aggiungere tutti i file nel database
 
