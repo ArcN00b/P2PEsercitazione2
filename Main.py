@@ -128,34 +128,69 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
             ttl = fields[3]
             file = fields[4]
 
-            # TODO eseguire metodo che controlla se è presente un packetId nel database
-            # ad esempio database.checkId(pkId)
+            # Controllo se il packetId è già presente se è presente non rispondo alla richiesta
+            # E non la rispedisco
+            global database
+            if database.checkPkt(pkID)==False:
+                database.addPkt(pkID)
+                # Esegue la risposta ad una query
+                msgRet = msgRet + pkID
+                ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
+                port = '{:0>5}'.format(Utility.PORT)
+                msgRet = msgRet + ip + port
+                l = database.findMd5(file)
+                for i in range(0, len(l)):
+                    f = database.findFile(l[i][0])
+                    r = msgRet
+                    r = r + l[i][0] + f
+                    t1 = threading.Thread(target=Utility.sendMessage(r, ipDest, portDest))
+                    t1.start()
+                    lista.append(t1)
 
-            # Esegue la risposta ad una query
-            msgRet = msgRet + pkID
-            ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
-            port = '{:0>5}'.format(Utility.PORT)
-            msgRet = msgRet + ip + port
-            l = database.findMd5(file)
-            for i in range(0, len(l)):
-                f = database.findFile(l[i][0])
-                r = msgRet
-                r = r + l[i][0] + f
-                t1 = threading.Thread(target=Utility.sendMessage(r, ipDest, portDest))
+                # controllo se devo divulgare la query
+                if int(ttl) > 1:
+                    ttl='{:0>2}'.format(int(ttl)-1)
+                    msg="QUER"+pkID+ipDest+portDest+ttl+file
+                    Utility.sendAllNear(msg, database.listClient())
+
+                for i in range(0, len(lista)):
+                    lista[i].join()
+
+        elif command=="AQUE":
+            global database
+            if database.checkPkt(fields[0])==True:
+                global numFindFile
+                numFindFile=numFindFile+1
+                global listFindFile
+                listFindFile.append(fields)
+                print("-----")
+                print("Peer "+numFindFile)
+                print("IP "+fields[1]+fields[2])
+                print("MD5 "+fields[3])
+                print("Nome "+fields[4])
+                print("-----")
+
+        elif command=="NEAR":
+            global database
+            if database.checkPkt(fields[0])==False and int(fields[3])>1:
+                database.addPkt(fields[0])
+                ttl='{:0>2}'.format(int(fields[3])-1)
+                msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
+                t1 = threading.Thread(target=Utility.sendAllNear(msg, database.listClient()))
                 t1.start()
-                lista.append(t1)
+                t1.join()
 
-            # controllo se devo divulgare la query
-            if int(ttl) > 1:
-                Utility.sendAllNear(data, database.listClient())
-
-            for i in range(0, len(lista)):
-                lista[i].join()
+        elif command=="ANEA":
+            global database
+            if database.checkPkt(fields[0])==True:
+                database.addClient(fields[1],fields[2])
 
         else:
             print("ricevuto altro")
 
 
+numFindFile=0
+listFindFile=[]
 database = ManageDB()
 database.addFile("1"*32, "live brixton.jpg")
 
@@ -173,11 +208,39 @@ while True:
     print("6. Visualizza Vicini")
     print(" ")
     sel=input("Inserisci il numero del comando da eseguire ")
-    if sel==1: #TODO Eseguire una ricerca
-        print(sel)
+    if sel==1:
+        sel=input("Inserisci stringa da ricercare ")
+        while len(sel)>20:
+            sel=input("Stringa Troppo Lunga,reinserisci ")
+        pktID=Utility.generateId(16)
+        ip=Utility.MY_IPV4+'|'+Utility.MY_IPV6
+        port='{:0>5}'.format(Utility.PORT)
+        ttl='{:0>2}'.format(5)
+        search=sel+' '*(20-len(sel))
+        msg="QUER"+pktID+ip+port+ttl+search
+        database.addPkt(pktID)
+        t1 = threading.Thread(target=Utility.sendAllNear(msg, database.listClient()))
+        t1.start()
+        t1.join()
+        while numFindFile==0:
+            True
+        sel=input("Inserisci il numero del peer da cui effettuare il download")
+        datiPeer=listFindFile[numFindFile-1]
+        #TODO chiamata al metodo per eseguire il download
+
     elif sel==2:
-        #TODO Aggiornare i near
-        print(sel)
+        pktID=Utility.generateId(16)
+        ip=Utility.MY_IPV4+'|'+Utility.MY_IPV6
+        port='{:0>5}'.format(Utility.PORT)
+        ttl='{:0>2}'.format(2)
+        msg="NEAR"+pktID+ip+port+ttl
+        database.addPkt(pktID)
+        listaNear=database.listClient()
+        database.removeAllClient()
+        t1 = threading.Thread(target=Utility.sendAllNear(msg, listaNear))
+        t1.start()
+        t1.join()
+
     elif sel==3:        #TODO Aggiungere un file al database
         print(sel)
     elif sel==4:        #TODO Rimozione di un file dal database
