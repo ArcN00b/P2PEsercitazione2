@@ -261,20 +261,20 @@ while True:
 
         # Visualizzo la lista dei file
         if len(lst) > 0:
-            print("Scelta  MD5                                      Nome")
+            print("Scelta  MD5                                        Nome")
             for i in range(0,len(lst)):
-                print(i + " " + lst[i][0] + " " + lst[i][1])
+                print(str(i) + "   " + lst[i][0] + " " + lst[i][1])
 
             # Chiedo quale file rimuovere
             i = -1
             while i not in range(0, len(lst)):
-                i = int(input("Scegli il file da cancellare"))
+                i = int(input("Scegli il file da cancellare "))
 
             # Elimino il file
             database.removeFile(lst[i][0])
             print("Operazione completata")
         else:
-            print("Non ci sono file nella nel database")
+            print("Non ci sono file nel database")
 
     elif sel=="5":        #TODO visualizza tutti i file del database
 
@@ -283,18 +283,18 @@ while True:
 
         # Visualizzo la lista dei file
         if len(lst) > 0:
-            print("MD5                                      Nome")
+            print("MD5                                        Nome")
             for file in lst:
                 print(file[0] + " " + file[1])
         else:
-            print("Non ci sono file nella nel database")
+            print("Non ci sono file nel database")
 
     elif sel=="6":
         lista=database.listClient()
         print(" ")
         print("IP e PORTA")
         for i in range(0,len(lista)):
-            print("IP"+i+" "+lista[i][0]+" "+lista[i][1])
+            print("IP"+str(i)+" "+lista[i][0]+" "+lista[i][1])
     else:
         sel=input("Commando Errato, attesa nuovo comando ")
 
