@@ -8,11 +8,9 @@ from ManageDB import *
 from Parser import *
 from Utility import *
 
-# Definizione variabili globali, altrimenti l'interprete si arrabbia
+global database
 global numFindFile
 global listFindFile
-global listaNear
-global database
 
 class Peer:
 
