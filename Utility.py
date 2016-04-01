@@ -51,7 +51,15 @@ class Utility:
     def getIp(stringa):
         t = stringa.find('|')
         if t != -1:
-            ipv4 = stringa[0:t]
+
+            ''' Modifico così questa funzione poichè se usiamo una connect di un indirizzo come 127.000.000.001
+                purtroppo da errore, così trasformo l'ip sopra in 127.0.0.1'''
+            ipv4 = ''
+            tmp = stringa[0:t].strip('.')
+            for grp in tmp:
+                ipv4 += grp.lstrip('0') + '.'
+            ipv4 = ipv4[0:-1]
+            #Da vedere se funziona
             ipv6 = stringa[t + 1:]
             return ipv4, ipv6
         else:
@@ -126,10 +134,10 @@ class Sender:
 
     # Funzione che lancia il worker e controlla la chiusura improvvisa
     def start(self):
-        try:
+       # try:
             self.sendAllNear(self.messaggio, self.ip, self.port)
-        except Exception as e:
-            print("errore: ", e)
+        #except Exception as e:
+           # print("errore: ", e)
 
     def sendMessagge(self, messaggio, ip, porta):
         r = 0  # random.randrange(0, 100)
@@ -156,26 +164,27 @@ class SenderAll:
 
     # Funzione che lancia il worker e controlla la chiusura improvvisa
     def start(self):
-        try:
+        #try:
             self.sendAllNear(self.messaggio, self.listaNear)
-        except Exception as e:
-            print("errore: ", e)
+        #except Exception as e:
+           # print("errore: ", e)
 
     def sendAllNear(self, messaggio, listaNear):
         for i in range(0, len(listaNear)):
             self.sendMessage(messaggio, listaNear[i][0], listaNear[i][1])
 
-    def sendMessagge(messaggio, ip, porta):
+    def sendMessage(self, messaggio, ip, porta):
         r = 0  # random.randrange(0, 100)
         ipv4, ipv6 = Utility.getIp(ip)
         if r < 50:
             a = ipv4
+            print(a)
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         else:
             a = ipv6
             sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
-        sock.connect((a, int(porta)))
+        sock.connect((socket.inet_aton(a), int(porta)))
         sock.sendall(messaggio.encode())
         time.sleep(1)
         sock.close()
@@ -192,10 +201,10 @@ class Downloader:
 
     # Funzione che lancia il worker e controlla la chiusura improvvisa
     def start(self):
-        try:
+        #try:
             self.download(self.ipp2p, self.pp2p, self.md5, self.name)
-        except Exception as e:
-            print("errore: ", e)
+        #except Exception as e:
+            #print("errore: ", e)
 
     def download(self, ipp2p, pp2p, md5, name):
         r = 0  # random.randrange(0,100)
