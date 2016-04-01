@@ -8,6 +8,12 @@ from ManageDB import *
 from Parser import *
 from Utility import *
 
+# Definizione variabili globali, altrimenti l'interprete si arrabbia
+global numFindFile
+global listFindFile
+global listaNear
+global database
+
 class Peer:
 
     def __init__(self,ipv4,ipv6):
@@ -225,14 +231,29 @@ while True:
         search=sel+' '*(20-len(sel))
         msg="QUER"+pktID+ip+port+ttl+search
         database.addPkt(pktID)
+        numFindFile = 0
         t1 = threading.Thread(target=Utility.sendAllNear(msg, database.listClient()))
         t1.start()
         t1.join()
-        while numFindFile==0:
-            True
-        sel=input("Inserisci il numero del peer da cui effettuare il download")
-        datiPeer=listFindFile[numFindFile-1]
-        #TODO chiamata al metodo per eseguire il download
+
+        # Ogni 3 secondi controllo di avere risposte
+        while numFindFile == 0:
+            time.sleep(3)
+
+        # Visualizzo le possibili scelte
+        print("Scelta  PEER                                        MD5                       Nome")
+        for i in range(0,numFindFile):
+            print(str(i) + "   " + listFindFile[i][1] + " " + listFindFile[i][3] + " " + listFindFile[i][4])
+
+        # Chiedo quale file scaricare
+        i = -1
+        while i not in range(0, numFindFile):
+            i = int(input("Scegli il file da scaricare"))
+
+        # TODO chiamata al metodo per eseguire il download
+        t1 = threading.Thread(target=Utility.download(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4]))
+        t1.start()
+        t1.join()
 
     elif sel=="2":
         pktID=Utility.generateId(16)
@@ -247,29 +268,60 @@ while True:
         t1.start()
         t1.join()
 
-    elif sel=="3":        #TODO Aggiungere un file al database
-        print(sel)
+    elif sel=="3":        #TODO Aggiungere tutti i file nel database
 
-        nome=input("Inserisci il nome del file da aggiungere, compresa estensione ")
-        pathFile=pathDir + nome
+        #Ottengo la lista dei file dalla cartella corrente
+        lst = os.listdir(pathDir)
 
-        if(os.path.isfile(pathFile) ):
-            cod=Utility.generateMd5(pathFile)
-            database.addFile(cod,nome)
+        #Inserisco i file nel database
+        if len(lst) > 0:
+            for file in lst:
+                database.addFile(Utility.generateMd5(pathDir+file), file.ljust(100, ' ')) #Inserisco nel database il nome con gli spazi
+            print("Operazione completata")
         else:
-            print("Il file " + nome + " non è presente in  " + pathDir)
-            print(" ")
+            print("Non ci sono file nella directory")
 
     elif sel=="4":        #TODO Rimozione di un file dal database
-        print(sel)
+
+        # Ottengo la lista dei file dal database
+        lst = database.listFile()
+
+        # Visualizzo la lista dei file
+        if len(lst) > 0:
+            print("Scelta  MD5                                        Nome")
+            for i in range(0,len(lst)):
+                print(str(i) + "   " + lst[i][0] + " " + lst[i][1])
+
+            # Chiedo quale file rimuovere
+            i = -1
+            while i not in range(0, len(lst)):
+                i = int(input("Scegli il file da cancellare "))
+
+            # Elimino il file
+            database.removeFile(lst[i][0])
+            print("Operazione completata")
+        else:
+            print("Non ci sono file nel database")
+
     elif sel=="5":        #TODO visualizza tutti i file del database
-        print(sel)
+
+        # Ottengo la lista dei file dal database
+        lst = database.listFile()
+
+        # Visualizzo la lista dei file
+        if len(lst) > 0:
+            print("MD5                                        Nome")
+            for file in lst:
+                print(file[0] + " " + file[1])
+        else:
+            print("Non ci sono file nel database")
+
     elif sel=="6":
         lista=database.listClient()
         print(" ")
         print("IP e PORTA")
         for i in range(0,len(lista)):
-            print("IP"+i+" "+lista[i][0]+" "+lista[i][1])
+            print("IP"+str(i)+" "+lista[i][0]+" "+lista[i][1])
     else:
         sel=input("Commando Errato, attesa nuovo comando ")
 
