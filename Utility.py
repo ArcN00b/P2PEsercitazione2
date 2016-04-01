@@ -52,7 +52,7 @@ class Utility:
         t = stringa.find('|')
         if t != -1:
             ipv4 = stringa[0:t]
-            ipv6 = stringa[t:]
+            ipv6 = stringa[t+1:]
             return ipv4, ipv6
         else:
             return '', ''
@@ -99,7 +99,7 @@ class Utility:
             ind = ipv6
             sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
-        sock.connect((ind, pp2p))
+        sock.connect((ind, int(pp2p)))
         sock.sendall(('RETR' + md5).encode())
 
         # ricevo i primi 10 Byte che sono "ARET" + n_chunk
