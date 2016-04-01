@@ -78,7 +78,6 @@ class Utility:
     # Manda un messaggio a tutti i vicini
     @staticmethod
     def sendAllNear(messaggio, listaNear):
-        lista = []
         for i in range(0, len(listaNear)):
             Utility.sendMessage(messaggio, listaNear[i][0], listaNear[i][1])
 
@@ -128,9 +127,24 @@ class Sender:
     # Funzione che lancia il worker e controlla la chiusura improvvisa
     def start(self):
         try:
-            Utility.sendAllNear(self.messaggio, self.ip, self.port)
+            self.sendAllNear(self.messaggio, self.ip, self.port)
         except Exception as e:
             print("errore: ", e)
+
+    def sendMessagge(self, messaggio, ip, porta):
+        r = 0  # random.randrange(0, 100)
+        ipv4, ipv6 = Utility.getIp(ip)
+        if r < 50:
+            a = ipv4
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            a = ipv6
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+
+        sock.connect((a, int(porta)))
+        sock.sendall(messaggio.encode())
+        time.sleep(1)
+        sock.close()
 
 class SenderAll:
     # Costruttore che inizializza gli attributi del Worker
@@ -138,14 +152,33 @@ class SenderAll:
         # definizione thread del client
         threading.Thread.__init__(self)
         self.messaggio = messaggio
-        self.listanear = listaNear
+        self.listaNear = listaNear
 
     # Funzione che lancia il worker e controlla la chiusura improvvisa
     def start(self):
         try:
-            Utility.sendAllNear(self.messaggio, self.listaNear)
+            self.sendAllNear(self.messaggio, self.listaNear)
         except Exception as e:
             print("errore: ", e)
+
+    def sendAllNear(self, messaggio, listaNear):
+        for i in range(0, len(listaNear)):
+            self.sendMessage(messaggio, listaNear[i][0], listaNear[i][1])
+
+    def sendMessagge(messaggio, ip, porta):
+        r = 0  # random.randrange(0, 100)
+        ipv4, ipv6 = Utility.getIp(ip)
+        if r < 50:
+            a = ipv4
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            a = ipv6
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+
+        sock.connect((a, int(porta)))
+        sock.sendall(messaggio.encode())
+        time.sleep(1)
+        sock.close()
 
 class Downloader:
     # Costruttore che inizializza gli attributi del Worker
@@ -160,6 +193,37 @@ class Downloader:
     # Funzione che lancia il worker e controlla la chiusura improvvisa
     def start(self):
         try:
-            Utility.download(self.ipp2p, self.pp2p, self.md5, self.name)
+            self.download(self.ipp2p, self.pp2p, self.md5, self.name)
         except Exception as e:
             print("errore: ", e)
+
+    def download(self, ipp2p, pp2p, md5, name):
+        r = 0  # random.randrange(0,100)
+        ipv4, ipv6 = Utility.getIp(ipp2p)
+        if r < 50:
+            ind = ipv4
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            ind = ipv6
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+
+        sock.connect((ind, pp2p))
+        sock.sendall(('RETR' + md5).encode())
+
+        # ricevo i primi 10 Byte che sono "ARET" + n_chunk
+        recv_mess = sock.recv(10).decode()
+        if recv_mess[:4] == "ARET":
+            num_chunk = int(recv_mess[4:])
+            count_chunk = 0
+
+            # apro il file per la scrittura
+            f = open(name.rstrip(' '), "wb")  # Apro il file rimuovendo gli spazi finali dal nome
+            buffer = bytes()
+
+            # Finchè i chunk non sono completi
+            while count_chunk < num_chunk:
+                chunklen = int(sock.recv(5).decode())  # Leggo la lunghezza del chunk
+                buffer = sock.recv(chunklen)  # Leggo il contenuto del chunk
+                f.write(buffer)  # Scrivo il contenuto del chunk nel file
+                count_chunk += 1  # Aggiorno il contatore
+            f.close()
