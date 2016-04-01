@@ -157,12 +157,17 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
 
 database = ManageDB()
-database.addFile("1"*32, "live brixton.jpg")
+#database.addFile("1"*32, "live brixton.jpg")
 
 # i = db.findFile(md5="1"*32)
 # print("valore i: "+i[0][0])
 
-p=Peer('127.0.0.1','::1')
+#p=Peer('127.0.0.1','::1')
+
+pathDir="/home/riccardo/Scrivania/FileProgetto/"
+#if not os.path.exists(pathDir):
+#    os.makedirs(pathDir)
+
 
 while True:
     print("1. Ricerca")
@@ -178,8 +183,19 @@ while True:
     elif sel==2:
         #TODO Aggiornare i near
         print(sel)
-    elif sel==3:        #TODO Aggiungere un file al database
+    elif sel=="3":        #TODO Aggiungere un file al database
         print(sel)
+
+        nome=input("Inserisci il nome del file da aggiungere, compresa estensione ")
+        pathFile=pathDir + nome
+
+        if(os.path.isfile(pathFile) ):
+            cod=Utility.generateMd5(pathFile)
+            database.addFile(cod,nome)
+        else:
+            print("Il file " + nome + " non è presente in  " + pathDir)
+            print(" ")
+
     elif sel==4:        #TODO Rimozione di un file dal database
         print(sel)
     elif sel==5:        #TODO visualizza tutti i file del database
@@ -191,5 +207,5 @@ while True:
         for i in range(0,len(lista)):
             print("IP"+i+" "+lista[i][0]+" "+lista[i][1])
     else:
-        sel=input("Commando Errato, attesa nuovo comando ")
+        print("Commando Errato: "+ sel)
 
