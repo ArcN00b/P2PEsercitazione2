@@ -7,7 +7,7 @@ while True:
 
     r=random.randrange(0,100)
     if r<50:
-        a='192.168.0.5'
+        a='127.0.0.1'
         b='IPV4 '
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     else:
@@ -15,8 +15,8 @@ while True:
         b='IPV6 '
         sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
-    sock.connect((a, 2680))
-    sock.sendall((b+sys.argv[1]).encode())
+    sock.connect((a, 3000))
+    sock.sendall((b+"inviato").encode())
 
-    time.sleep(2)
+    time.sleep(random.randint(1,5))
     sock.close()
