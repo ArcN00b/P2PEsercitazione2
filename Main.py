@@ -8,6 +8,12 @@ from ManageDB import *
 from Parser import *
 from Utility import *
 
+# Definizione variabili globali, altrimenti l'interprete si arrabbia
+global numFindFile
+global listFindFile
+global listaNear
+global database
+
 class Peer:
 
     def __init__(self,ipv4,ipv6):
@@ -131,7 +137,6 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
             # Controllo se il packetId è già presente se è presente non rispondo alla richiesta
             # E non la rispedisco
-            global database
             if database.checkPkt(pkID)==False:
                 database.addPkt(pkID)
                 # Esegue la risposta ad una query
@@ -158,11 +163,8 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     lista[i].join()
 
         elif command=="AQUE":
-            global database
             if database.checkPkt(fields[0])==True:
-                global numFindFile
-                numFindFile=numFindFile+1
-                global listFindFile
+                numFindFile += 1
                 listFindFile.append(fields)
                 print("-----")
                 print("Peer "+numFindFile)
@@ -172,7 +174,6 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 print("-----")
 
         elif command=="NEAR":
-            global database
             if database.checkPkt(fields[0])==False and int(fields[3])>1:
                 database.addPkt(fields[0])
                 ttl='{:0>2}'.format(int(fields[3])-1)
@@ -182,13 +183,11 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 t1.join()
 
         elif command=="ANEA":
-            global database
             if database.checkPkt(fields[0])==True:
                 database.addClient(fields[1],fields[2])
 
         else:
             print("ricevuto altro")
-
 
 numFindFile=0
 listFindFile=[]
@@ -219,22 +218,23 @@ while True:
         search=sel+' '*(20-len(sel))
         msg="QUER"+pktID+ip+port+ttl+search
         database.addPkt(pktID)
+        numFindFile = 0
         t1 = threading.Thread(target=Utility.sendAllNear(msg, database.listClient()))
         t1.start()
         t1.join()
 
         # Ogni 3 secondi controllo di avere risposte
-        while len(listFindFile) == 0:
+        while numFindFile == 0:
             time.sleep(3)
 
         # Visualizzo le possibili scelte
         print("Scelta  PEER                                        MD5                       Nome")
-        for i in range(0,len(listFindFile)):
+        for i in range(0,numFindFile):
             print(str(i) + "   " + listFindFile[i][1] + " " + listFindFile[i][3] + " " + listFindFile[i][4])
 
         # Chiedo quale file scaricare
         i = -1
-        while i not in range(0, len(listFindFile)):
+        while i not in range(0, numFindFile):
             i = int(input("Scegli il file da scaricare"))
 
         # TODO chiamata al metodo per eseguire il download
