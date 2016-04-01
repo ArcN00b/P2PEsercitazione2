@@ -222,11 +222,25 @@ while True:
         t1 = threading.Thread(target=Utility.sendAllNear(msg, database.listClient()))
         t1.start()
         t1.join()
-        while numFindFile==0:
-            True
-        sel=input("Inserisci il numero del peer da cui effettuare il download")
-        datiPeer=listFindFile[numFindFile-1]
-        #TODO chiamata al metodo per eseguire il download
+
+        # Ogni 3 secondi controllo di avere risposte
+        while len(listFindFile) == 0:
+            time.sleep(3)
+
+        # Visualizzo le possibili scelte
+        print("Scelta  PEER                                        MD5                       Nome")
+        for i in range(0,len(listFindFile)):
+            print(str(i) + "   " + listFindFile[i][1] + " " + listFindFile[i][3] + " " + listFindFile[i][4])
+
+        # Chiedo quale file scaricare
+        i = -1
+        while i not in range(0, len(listFindFile)):
+            i = int(input("Scegli il file da scaricare"))
+
+        # TODO chiamata al metodo per eseguire il download
+        t1 = threading.Thread(target=Utility.download(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4]))
+        t1.start()
+        t1.join()
 
     elif sel=="2":
         pktID=Utility.generateId(16)
@@ -249,7 +263,7 @@ while True:
         #Inserisco i file nel database
         if len(lst) > 0:
             for file in lst:
-                database.addFile(Utility.generateMd5(pathDir+file), file)
+                database.addFile(Utility.generateMd5(pathDir+file), file.ljust(100, ' ')) #Inserisco nel database il nome con gli spazi
             print("Operazione completata")
         else:
             print("Non ci sono file nella directory")

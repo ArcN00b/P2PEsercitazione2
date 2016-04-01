@@ -86,3 +86,37 @@ class Utility:
 
         for i in range(0, len(lista)):
             lista[i].join()
+
+    @staticmethod
+    def download(ipp2p, pp2p, md5, name):
+
+        r=random.randrange(0,100)
+        ipv4, ipv6 = Utility.getIp(ipp2p)
+        if r < 50:
+            ind = ipv4
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            ind = ipv6
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+
+        sock.connect((ind, pp2p))
+        sock.sendall(('RETR' + md5).encode())
+
+        # ricevo i primi 10 Byte che sono "ARET" + n_chunk
+        recv_mess = sock.recv(10).decode()
+        if recv_mess[:4] == "ARET":
+            num_chunk = int(recv_mess[4:])
+            count_chunk = 0
+
+            # apro il file per la scrittura
+            f = open(name.rstrip(' '), "wb") #Apro il file rimuovendo gli spazi finali dal nome
+            buffer = bytes()
+
+            # Finchè i chunk non sono completi
+            while count_chunk < num_chunk:
+
+                chunklen = int(sock.recv(5).decode())       # Leggo la lunghezza del chunk
+                buffer = sock.recv(chunklen)                # Leggo il contenuto del chunk
+                f.write(buffer)                             # Scrivo il contenuto del chunk nel file
+                count_chunk += 1                            # Aggiorno il contatore
+            f.close()
