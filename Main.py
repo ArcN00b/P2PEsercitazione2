@@ -4,6 +4,8 @@ import os
 import asyncore
 import socket
 import threading
+from fileinput import filename
+
 from ManageDB import *
 from Parser import *
 from Utility import *
@@ -134,7 +136,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 ipDest = fields[1]
                 portDest = fields[2]
                 ttl = fields[3]
-                file = fields[4]
+                name = fields[4]
 
                 # Controllo se il packetId è già presente se è presente non rispondo alla richiesta
                 # E non la rispedisco
@@ -145,18 +147,18 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
                     port = '{:0>5}'.format(Utility.PORT)
                     msgRet = msgRet + ip + port
-                    l = database.findMd5(file)
+                    l = database.findMd5(name.strip())
                     for i in range(0, len(l)):
                         f = database.findFile(l[i][0])
                         r = msgRet
-                        r = r + l[i][0] + f[0][0]
+                        r = r + l[i][0] + str(f[0][0]).ljust(width=100, fillchar=' ')
                         t1 = Sender(r, ipDest, portDest)
                         t1.run()
 
                     # controllo se devo divulgare la query
                     if int(ttl) > 1:
                         ttl='{:0>2}'.format(int(ttl)-1)
-                        msg="QUER"+pkID+ipDest+portDest+ttl+file
+                        msg="QUER"+pkID+ipDest+portDest+ttl+name
                         t2 = SenderAll(msg, database.listClient())
                         t2.run()
 
@@ -195,6 +197,8 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 numFindFile=0
 listFindFile=[]
 database = ManageDB()
+# TODO completare con la lista dei near iniziali
+
 #database.addFile("1"*32, "live brixton.jpg")
 
 # i = db.findFile(md5="1"*32)
@@ -269,7 +273,7 @@ while True:
         #Inserisco i file nel database
         if len(lst) > 0:
             for file in lst:
-                database.addFile(Utility.generateMd5(Utility.PATHDIR+file), file.ljust(100, ' ')) #Inserisco nel database il nome con gli spazi
+                database.addFile(Utility.generateMd5(Utility.PATHDIR+file), file)
             print("Operazione completata")
         else:
             print("Non ci sono file nella directory")

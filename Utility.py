@@ -6,8 +6,8 @@ import threading
 
 class Utility:
 
-    MY_IPV4='192.168.000.009'
-    MY_IPV6='FC00:0000:0000:0000:0000:0000:0007:0001'
+    MY_IPV4='127.000.000.001'
+    MY_IPV6='0000:0000:0000:0000:0000:0000:0000:0001'
     PORT=3000
     PATHDIR='/home/simone/Immagini/'
 
