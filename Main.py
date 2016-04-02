@@ -111,8 +111,8 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     # Invio la lunghezza del chunk
                     print(str(len(r)).zfill(5))
                     mess = str(len(r)).zfill(5).encode()
-                    time.sleep(0.003)
                     self.send(mess)
+                    time.sleep(0.003)
 
                     # Invio il chunk
                     mess = r
