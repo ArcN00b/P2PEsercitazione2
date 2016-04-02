@@ -97,10 +97,10 @@ class Sender:
         ipv4, ipv6 = Utility.getIp(ip)
         if r < 50:
             a = ipv4
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
         else:
             a = ipv6
-            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
 
         sock.connect((a, int(porta)))
         print('inviato: '+messaggio)
@@ -131,10 +131,10 @@ class SenderAll:
         ipv4, ipv6 = Utility.getIp(ip)
         if r < 50:
             a = ipv4
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
         else:
             a = ipv6
-            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
 
         sock.connect((a, int(porta)))
         print('inviato: '+messaggio)
@@ -163,10 +163,10 @@ class Downloader:
         ipv4, ipv6 = Utility.getIp(ipp2p)
         if r < 50:
             ind = ipv4
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
         else:
             ind = ipv6
-            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
 
         print(name)
         sock.connect((ind, int(pp2p)))

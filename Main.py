@@ -34,7 +34,7 @@ class ReceiveServerIPV4(asyncore.dispatcher):
         asyncore.dispatcher.__init__(self)
         self.squeue = squeue
         self.data_t = data_t #max near, mio ip e mia porta
-        self.create_socket(socket.AF_INET,socket.SOCK_STREAM)#crea socket ipv6
+        self.create_socket(socket.AF_INET,socket.SOCK_STREAM|socket.SOCK_CLOEXEC)#crea socket ipv6
         self.set_reuse_addr()#riusa indirizzo, evita problemi indirizzo occupato
         self.bind((ip, port)) #crea la bind del mio ip e porta
         self.listen(5)# sta in ascolto di 5 persone max
@@ -53,7 +53,7 @@ class ReceiveServerIPV6(asyncore.dispatcher):
         asyncore.dispatcher.__init__(self)
         self.squeue = squeue
         self.data_t = data_t #max near, mio ip e mia porta
-        self.create_socket(socket.AF_INET6,socket.SOCK_STREAM)#crea socket ipv6
+        self.create_socket(socket.AF_INET6,socket.SOCK_STREAM|socket.SOCK_CLOEXEC)#crea socket ipv6
         self.set_reuse_addr()#riusa indirizzo, evita problemi indirizzo occupato
         self.bind((ip, port)) #crea la bind del mio ip e porta
         self.listen(5)# sta in ascolto di 5 persone max
@@ -112,11 +112,11 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     print(str(len(r)).zfill(5))
                     mess = str(len(r)).zfill(5).encode()
                     #time.sleep(0.1)
-                    self.handle_write(mess, socket.MSG_OOB | socket.MSG_DONTROUTE)
+                    self.send(mess)
 
                     # Invio il chunk
                     mess = r
-                    self.handle_write(mess, socket.MSG_OOB | socket.MSG_DONTROUTE)
+                    self.send(mess)
 
                     # Proseguo la lettura del file
                     r = f.read(chuncklen)
