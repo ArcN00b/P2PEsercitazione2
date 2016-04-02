@@ -246,11 +246,12 @@ while True:
 
         # Chiedo quale file scaricare
         i = -1
-        while i not in range(0, numFindFile +1):
+        while i not in range(1, numFindFile +1):
             i = int(input("Scegli il file da scaricare oppure no ")) - 1
 
-        t1 = Downloader(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4])
-        t1.run()
+        if i > 0:
+            t1 = Downloader(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4])
+            t1.run()
 
     elif sel=="2":
         pktID=Utility.generateId(16)
