@@ -82,7 +82,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
         if command == "RETR":
             # Imposto la lunghezza dei chunk e ottengo il nome del file a cui corrisponde l'md5
-            chuncklen = 512;
+            chuncklen = 1024
             peer_md5 = fields[0]
             obj = database.findFile(peer_md5)
 
@@ -111,12 +111,12 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     # Invio la lunghezza del chunk
                     print(str(len(r)).zfill(5))
                     mess = str(len(r)).zfill(5).encode()
-                    time.sleep(0.1)
-                    self.send(mess)
+                    #time.sleep(0.1)
+                    self.handle_write(mess, socket.MSG_OOB | socket.MSG_DONTROUTE)
 
                     # Invio il chunk
                     mess = r
-                    self.send(mess)
+                    self.handle_write(mess, socket.MSG_OOB | socket.MSG_DONTROUTE)
 
                     # Proseguo la lettura del file
                     r = f.read(chuncklen)
@@ -248,7 +248,7 @@ while True:
         # Chiedo quale file scaricare
         i = -1
         while i not in range(0, numFindFile +1):
-            i = int(input("Scegli il file da scaricare oppure no")) - 1
+            i = int(input("Scegli il file da scaricare oppure no ")) - 1
 
         # TODO chiamata al metodo per eseguire il download
         t1 = Downloader(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4])
