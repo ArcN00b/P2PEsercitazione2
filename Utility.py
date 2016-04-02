@@ -177,10 +177,8 @@ class Downloader:
 
             # Finchè i chunk non sono completi
             while count_chunk < num_chunk:
-                tmp = sock.recv(5).decode(errors='ignore')
-                #if tmp.isnumeric() and len(tmp) == 5:
-                print(tmp)
-                chunklen = int(tmp) #leggo la lunghezza del chunk
+                chunklen = int(sock.recv(5).decode()) #leggo la lunghezza del chunk
+                time.sleep(0.001)
                 buffer = sock.recv(chunklen)  # Leggo il contenuto del chunk
                 f.write(buffer)  # Scrivo il contenuto del chunk nel file
                 count_chunk += 1  # Aggiorno il contatore
