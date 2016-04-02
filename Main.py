@@ -164,7 +164,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
             elif command=="AQUE":
                 if database.checkPkt(fields[0])==True:
                     global numFindFile
-                    numFindFile=+=1
+                    numFindFile+=1
                     listFindFile.append(fields)
                     print("-----")
                     print("Peer "+str(numFindFile))
@@ -223,7 +223,7 @@ while True:
         ip=Utility.MY_IPV4+'|'+Utility.MY_IPV6
         port='{:0>5}'.format(Utility.PORT)
         ttl='{:0>2}'.format(5)
-        search=sel+' '*(20-len(sel))
+        search=sel.ljust(width=20,fillchar=' ')
         msg="QUER"+pktID+ip+port+ttl+search
         database.addPkt(pktID)
         numFindFile = 0
