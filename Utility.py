@@ -9,6 +9,7 @@ class Utility:
     MY_IPV4='192.168.000.009'
     MY_IPV6='FC00:0000:0000:0000:0000:0000:0007:0001'
     PORT=3000
+    PATHDIR='/home/simone/Immagini/'
 
     # Metodo che genera un numero random nel range [1024, 65535]
     @staticmethod
@@ -218,6 +219,7 @@ class Downloader:
             ind = ipv6
             sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
+        print(name)
         sock.connect((ind, int(pp2p)))
         sock.sendall(('RETR' + md5).encode())
 
@@ -228,7 +230,7 @@ class Downloader:
             count_chunk = 0
 
             # apro il file per la scrittura
-            f = open(name.rstrip(' '), "wb")  # Apro il file rimuovendo gli spazi finali dal nome
+            f = open(Utility.PATHDIR+name.rstrip(' '), "wb")  # Apro il file rimuovendo gli spazi finali dal nome
             buffer = bytes()
 
             # Finchè i chunk non sono completi

@@ -88,7 +88,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
             if len(obj) > 0:
                 # lettura statistiche file
-                statinfo = os.stat(obj[0][0])
+                statinfo = os.stat(Utility.PATHDIR+obj[0][0].rstrip(' '))
                 # imposto lunghezza del file
                 len_file = statinfo.st_size
                 # controllo quante parti va diviso il file
@@ -102,7 +102,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 self.send(mess)
 
                 # Apro il file in lettura e ne leggo una parte
-                f = open(obj[0][0], 'rb')
+                f = open(Utility.PATHDIR+obj[0][0].rstrip(' '), 'rb')
                 r = f.read(chuncklen)
 
                 # Finchè il file non termina
@@ -159,10 +159,11 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
         elif command=="AQUE":
             if database.checkPkt(fields[0])==True:
+                global numFindFile
                 numFindFile+=1
                 listFindFile.append(fields)
                 print("-----")
-                print("Peer "+numFindFile)
+                print("Peer "+str(numFindFile))
                 print("IP "+fields[1]+fields[2])
                 print("MD5 "+fields[3])
                 print("Nome "+fields[4])
@@ -180,6 +181,8 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
             if database.checkPkt(fields[0])==True:
                 database.addClient(fields[1],fields[2])
 
+        self.close()
+
 
 numFindFile=0
 listFindFile=[]
@@ -190,20 +193,18 @@ database = ManageDB()
 # print("valore i: "+i[0][0])
 
 p=Peer('192.168.0.9','::1')
-
-pathDir="/home/simone/Immagini/"
 #if not os.path.exists(pathDir):
 #    os.makedirs(pathDir)
 
 
 while True:
     # Ottengo la lista dei file dalla cartella corrente
-    lst = os.listdir(pathDir)
+    lst = os.listdir(Utility.PATHDIR)
 
     # Inserisco i file nel database
     if len(lst) > 0:
         for file in lst:
-            database.addFile(Utility.generateMd5(pathDir + file),
+            database.addFile(Utility.generateMd5(Utility.PATHDIR + file),
                              file.ljust(100, ' '))  # Inserisco nel database il nome con gli spazi
         print("Operazione completata")
     else:
@@ -237,10 +238,10 @@ while True:
             time.sleep(3)
 
         # Visualizzo le possibili scelte
-        print("Scelta  PEER                                        MD5                       Nome")
+        print("Scelta  PEER                                                        MD5                       Nome")
         print("0 Non scaricare nulla")
         for i in range(0,numFindFile):
-            print(str(i + 1) + "   " + listFindFile[i][1] + " " + listFindFile[i][3] + " " + listFindFile[i][4])
+            print(str(i + 1) + " " + listFindFile[i][1] + " " + listFindFile[i][3] + " " + listFindFile[i][4])
 
         # Chiedo quale file scaricare
         i = -1
@@ -266,12 +267,12 @@ while True:
     elif sel=="3":        #TODO Aggiungere tutti i file nel database
 
         #Ottengo la lista dei file dalla cartella corrente
-        lst = os.listdir(pathDir)
+        lst = os.listdir(Utility.PATHDIR)
 
         #Inserisco i file nel database
         if len(lst) > 0:
             for file in lst:
-                database.addFile(Utility.generateMd5(pathDir+file), file.ljust(100, ' ')) #Inserisco nel database il nome con gli spazi
+                database.addFile(Utility.generateMd5(Utility.PATHDIR+file), file.ljust(100, ' ')) #Inserisco nel database il nome con gli spazi
             print("Operazione completata")
         else:
             print("Non ci sono file nella directory")
