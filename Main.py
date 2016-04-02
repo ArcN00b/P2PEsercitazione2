@@ -126,7 +126,6 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     # Chiudo il file
                     f.close()
 
-
             elif(command == "QUER"):
                 # TODO è meglio mettere tutta l'esecuzione del metodo in un thread
                 msgRet = 'AQUE'
@@ -137,29 +136,29 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 ttl = fields[3]
                 file = fields[4]
 
-            # Controllo se il packetId è già presente se è presente non rispondo alla richiesta
-            # E non la rispedisco
-            if database.checkPkt(pkID)==False:
-                database.addPkt(pkID)
-                # Esegue la risposta ad una query
-                msgRet = msgRet + pkID
-                ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
-                port = '{:0>5}'.format(Utility.PORT)
-                msgRet = msgRet + ip + port
-                l = database.findMd5(file)
-                for i in range(0, len(l)):
-                    f = database.findFile(l[i][0])
-                    r = msgRet
-                    r = r + l[i][0] + f[0][0]
-                    t1 = Sender(r, ipDest, portDest)
-                    t1.run()
+                # Controllo se il packetId è già presente se è presente non rispondo alla richiesta
+                # E non la rispedisco
+                if database.checkPkt(pkID)==False:
+                    database.addPkt(pkID)
+                    # Esegue la risposta ad una query
+                    msgRet = msgRet + pkID
+                    ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
+                    port = '{:0>5}'.format(Utility.PORT)
+                    msgRet = msgRet + ip + port
+                    l = database.findMd5(file)
+                    for i in range(0, len(l)):
+                        f = database.findFile(l[i][0])
+                        r = msgRet
+                        r = r + l[i][0] + f[0][0]
+                        t1 = Sender(r, ipDest, portDest)
+                        t1.run()
 
-                # controllo se devo divulgare la query
-                if int(ttl) > 1:
-                    ttl='{:0>2}'.format(int(ttl)-1)
-                    msg="QUER"+pkID+ipDest+portDest+ttl+file
-                    t2 = SenderAll(msg, database.listClient())
-                    t2.run()
+                    # controllo se devo divulgare la query
+                    if int(ttl) > 1:
+                        ttl='{:0>2}'.format(int(ttl)-1)
+                        msg="QUER"+pkID+ipDest+portDest+ttl+file
+                        t2 = SenderAll(msg, database.listClient())
+                        t2.run()
 
             elif command=="AQUE":
                 if database.checkPkt(fields[0])==True:
