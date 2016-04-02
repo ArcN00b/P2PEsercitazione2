@@ -69,13 +69,6 @@ class Utility:
         else:
             return '', ''
 
-    def isNotInt(str):
-        try:
-            int(str)
-            return False
-        except ValueError:
-            return True
-
 class Sender:
     # Costruttore che inizializza gli attributi del Worker
     def __init__(self, messaggio, ip, port):
@@ -97,10 +90,10 @@ class Sender:
         ipv4, ipv6 = Utility.getIp(ip)
         if r < 50:
             a = ipv4
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         else:
             a = ipv6
-            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
         sock.connect((a, int(porta)))
         print('inviato: '+messaggio)
@@ -131,10 +124,10 @@ class SenderAll:
         ipv4, ipv6 = Utility.getIp(ip)
         if r < 50:
             a = ipv4
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         else:
             a = ipv6
-            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
         sock.connect((a, int(porta)))
         print('inviato: '+messaggio)
@@ -163,10 +156,10 @@ class Downloader:
         ipv4, ipv6 = Utility.getIp(ipp2p)
         if r < 50:
             ind = ipv4
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         else:
             ind = ipv6
-            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM|socket.SOCK_CLOEXEC)
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
         print(name)
         sock.connect((ind, int(pp2p)))
