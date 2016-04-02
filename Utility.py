@@ -169,17 +169,20 @@ class Downloader:
         recv_mess = sock.recv(10).decode()
         if recv_mess[:4] == "ARET":
             num_chunk = int(recv_mess[4:])
-            count_chunk = 0
 
             # apro il file per la scrittura
             f = open(Utility.PATHDIR+name.rstrip(' '), "wb")  # Apro il file rimuovendo gli spazi finali dal nome
             buffer = bytes()
 
             # Finchè i chunk non sono completi
-            while count_chunk < num_chunk:
-                chunklen = int(sock.recv(5).decode()) #leggo la lunghezza del chunk
-                time.sleep(0.001)
+            for count_chunk in range (0 , num_chunk):
+                tmp = sock.recv(5) #leggo la lunghezza del chunk
+                while len(tmp) < 5:
+                    tmp += sock.recv(5 - len(tmp))
+                chunklen = int(tmp.decode())
                 buffer = sock.recv(chunklen)  # Leggo il contenuto del chunk
+                while len(buffer) < chunklen:
+                    buffer += sock.recv(chunklen-len(buffer))
                 f.write(buffer)  # Scrivo il contenuto del chunk nel file
-                count_chunk += 1  # Aggiorno il contatore
+
             f.close()

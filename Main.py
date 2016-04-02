@@ -112,7 +112,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     print(str(len(r)).zfill(5))
                     mess = str(len(r)).zfill(5).encode()
                     self.send(mess)
-                    time.sleep(0.003)
+                    time.sleep(0.001)
 
                     # Invio il chunk
                     mess = r
@@ -169,7 +169,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 print("Nome "+fields[4])
                 print("-----")
 
-        elif command=="NEAR":
+        elif command=="NEAR": #TODO rispondere con un pacchetto ANEA
             if database.checkPkt(fields[0])==False and int(fields[3])>1:
                 database.addPkt(fields[0])
                 ttl='{:0>2}'.format(int(fields[3])-1)
@@ -230,6 +230,7 @@ while True:
         msg="QUER"+pktID+ip+port+ttl+search
         database.addPkt(pktID)
         numFindFile = 0
+        listFindFile = []
         t1 = SenderAll(msg, database.listClient())
         t1.run()
 
@@ -248,7 +249,6 @@ while True:
         while i not in range(0, numFindFile +1):
             i = int(input("Scegli il file da scaricare oppure no ")) - 1
 
-        # TODO chiamata al metodo per eseguire il download
         t1 = Downloader(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4])
         t1.run()
 
@@ -264,7 +264,7 @@ while True:
         t1 = SenderAll(msg, listaNear)
         t1.run()
 
-    elif sel=="3":        #TODO Aggiungere tutti i file nel database
+    elif sel=="3":
 
         #Ottengo la lista dei file dalla cartella corrente
         lst = os.listdir(Utility.PATHDIR)
@@ -277,7 +277,7 @@ while True:
         else:
             print("Non ci sono file nella directory")
 
-    elif sel=="4":        #TODO Rimozione di un file dal database
+    elif sel=="4":
 
         # Ottengo la lista dei file dal database
         lst = database.listFile()
@@ -299,7 +299,7 @@ while True:
         else:
             print("Non ci sono file nel database")
 
-    elif sel=="5":        #TODO visualizza tutti i file del database
+    elif sel=="5":
 
         # Ottengo la lista dei file dal database
         lst = database.listFile()
