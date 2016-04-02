@@ -15,9 +15,9 @@ global listFindFile
 class Peer:
 
     def __init__(self,ipv4,ipv6):
-        self.ipv4=ipv4
-        self.ipv6=ipv6
-        self.port=3000                      # da sostituire con Utility.generatePort()
+        self.ipv4=Utility.MY_IPV4
+        self.ipv6=Utility.MY_IPV6
+        self.port=Utility.PORT                        # da sostituire con Utility.generatePort()
         self.stop_queue = queue.Queue(1)
         u1 = ReceiveServerIPV4(self.stop_queue,self.ipv4,self.port,(3,self.ipv4,self.port))
         self.server_thread = threading.Thread(target=u1)#crea un thread e gli assa l'handler per il server da far partire
@@ -26,6 +26,7 @@ class Peer:
         self.server_threadIP6 = threading.Thread(target=u2)
         self.server_thread.start()#parte
         self.server_threadIP6.start()
+
 
 class ReceiveServerIPV4(asyncore.dispatcher):
     """Questa classe rappresenta un server per accettare i pacchetti
@@ -77,61 +78,64 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
         # Ricevo i dati dal socket ed eseguo il parsing
         data = self.recv(2048)
-        print('ricevuto: '+data.decode())
-        command, fields = Parser.parse(data.decode())
+        # controllo lunghezza dati ricevuta
+        if len(data) > 0:
+            # converto i comandi
+            command, fields = Parser.parse(data.decode())
 
-        if command == "RETR":
-            # Imposto la lunghezza dei chunk e ottengo il nome del file a cui corrisponde l'md5
-            chuncklen = 1024
-            peer_md5 = fields[0]
-            obj = database.findFile(peer_md5)
+            if command == "RETR":
+                # Imposto la lunghezza dei chunk e ottengo il nome del file a cui corrisponde l'md5
+                chuncklen = 1024;
+                peer_md5 = fields[0]
+                obj = database.findFile(peer_md5)
 
-            if len(obj) > 0:
-                # lettura statistiche file
-                statinfo = os.stat(Utility.PATHDIR+obj[0][0].rstrip(' '))
-                # imposto lunghezza del file
-                len_file = statinfo.st_size
-                # controllo quante parti va diviso il file
-                num_chunk = len_file // chuncklen
-                if len_file % chuncklen != 0:
-                    num_chunk = num_chunk + 1
-                # pad con 0 davanti
-                num_chunk = str(num_chunk).zfill(6)
-                # costruzione risposta come ARET0000XX
-                mess = ('ARET' + num_chunk).encode()
-                self.send(mess)
-
-                # Apro il file in lettura e ne leggo una parte
-                f = open(Utility.PATHDIR+obj[0][0].rstrip(' '), 'rb')
-                r = f.read(chuncklen)
-
-                # Finchè il file non termina
-                while len(r) > 0:
-
-                    # Invio la lunghezza del chunk
-                    print(str(len(r)).zfill(5))
-                    mess = str(len(r)).zfill(5).encode()
-                    self.send(mess)
-                    time.sleep(0.001)
-
-                    # Invio il chunk
-                    mess = r
+                if len(obj) > 0:
+                    filename = Utility.PATHDIR + str(obj[0][0])
+                    # lettura statistiche file
+                    statinfo = os.stat(filename)
+                    # imposto lunghezza del file
+                    len_file = statinfo.st_size
+                    # controllo quante parti va diviso il file
+                    num_chunk = len_file // chuncklen
+                    if len_file % chuncklen != 0:
+                        num_chunk = num_chunk + 1
+                    # pad con 0 davanti
+                    num_chunk = str(num_chunk).zfill(6)
+                    # costruzione risposta come ARET0000XX
+                    mess = ('ARET' + num_chunk).encode()
                     self.send(mess)
 
-                    # Proseguo la lettura del file
+                    # Apro il file in lettura e ne leggo una parte
+                    f = open(filename, 'rb')
                     r = f.read(chuncklen)
-                # Chiudo il file
-                f.close()
+
+                    # Finchè il file non termina
+                    while len(r) > 0:
+
+                        # Invio la lunghezza del chunk
+                        mess = str(len(r)).zfill(5).encode()
+                        self.send(mess)
+                        time.sleep(0.001)
+
+                        # Invio il chunk
+                        mess = r
+                        self.send(mess)
+
+                        # Proseguo la lettura del file
+                        r = f.read(chuncklen)
+                    # Chiudo il file
+                    f.close()
 
 
-        elif(command == "QUER"):
-            msgRet = 'AQUE'
-            # Prendo i campi del messaggio ricevuto
-            pkID = fields[0]
-            ipDest = fields[1]
-            portDest = fields[2]
-            ttl = fields[3]
-            file = fields[4]
+            elif(command == "QUER"):
+                # TODO è meglio mettere tutta l'esecuzione del metodo in un thread
+                msgRet = 'AQUE'
+                # Prendo i campi del messaggio ricevuto
+                pkID = fields[0]
+                ipDest = fields[1]
+                portDest = fields[2]
+                ttl = fields[3]
+                file = fields[4]
 
             # Controllo se il packetId è già presente se è presente non rispondo alla richiesta
             # E non la rispedisco
@@ -142,7 +146,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
                 port = '{:0>5}'.format(Utility.PORT)
                 msgRet = msgRet + ip + port
-                l = database.findMd5(file.rstrip(' '))
+                l = database.findMd5(file)
                 for i in range(0, len(l)):
                     f = database.findFile(l[i][0])
                     r = msgRet
@@ -157,29 +161,34 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     t2 = SenderAll(msg, database.listClient())
                     t2.run()
 
-        elif command=="AQUE":
-            if database.checkPkt(fields[0])==True:
-                global numFindFile
-                numFindFile+=1
-                listFindFile.append(fields)
-                print("-----")
-                print("Peer "+str(numFindFile))
-                print("IP "+fields[1]+fields[2])
-                print("MD5 "+fields[3])
-                print("Nome "+fields[4])
-                print("-----")
+            elif command=="AQUE":
+                if database.checkPkt(fields[0])==True:
+                    global numFindFile
+                    numFindFile=+=1
+                    listFindFile.append(fields)
+                    print("-----")
+                    print("Peer "+str(numFindFile))
+                    print("IP "+fields[1]+fields[2])
+                    print("MD5 "+fields[3])
+                    print("Nome "+fields[4])
+                    print("-----")
 
-        elif command=="NEAR": #TODO rispondere con un pacchetto ANEA
-            if database.checkPkt(fields[0])==False and int(fields[3])>1:
-                database.addPkt(fields[0])
-                ttl='{:0>2}'.format(int(fields[3])-1)
-                msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
-                t1 = SenderAll(msg, database.listClient())
-                t1.run()
+            elif command=="NEAR": #TODO rispondere con un pacchetto ANEA
+                if database.checkPkt(fields[0])==False and int(fields[3])>1:
+                    database.addPkt(fields[0])
+                    ttl='{:0>2}'.format(int(fields[3])-1)
+                    msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
+                    t1 = SenderAll(msg, database.listClient())
+                    t1.run()
 
-        elif command=="ANEA":
-            if database.checkPkt(fields[0])==True:
-                database.addClient(fields[1],fields[2])
+            elif command=="ANEA":
+                if database.checkPkt(fields[0])==True:
+                    database.addClient(fields[1],fields[2])
+
+            else:
+                print("ricevuto altro")
+        else:
+            print("XX fine della ricezione XX")
 
         self.close()
 
@@ -192,24 +201,12 @@ database = ManageDB()
 # i = db.findFile(md5="1"*32)
 # print("valore i: "+i[0][0])
 
-p=Peer('192.168.0.9','::1')
+p=Peer("127.0.0.1","::1")
 #if not os.path.exists(pathDir):
 #    os.makedirs(pathDir)
 
 
 while True:
-    # Ottengo la lista dei file dalla cartella corrente
-    lst = os.listdir(Utility.PATHDIR)
-
-    # Inserisco i file nel database
-    if len(lst) > 0:
-        for file in lst:
-            database.addFile(Utility.generateMd5(Utility.PATHDIR + file),
-                             file.ljust(100, ' '))  # Inserisco nel database il nome con gli spazi
-        print("Operazione completata")
-    else:
-        print("Non ci sono file nella directory")
-    database.addClient("192.168.000.010|FC00:0000:0000:0000:0000:0000:0007:0004", "02000")
     print("1. Ricerca")
     print("2. Aggiorna Vicini")
     print("3. Aggiungi File")

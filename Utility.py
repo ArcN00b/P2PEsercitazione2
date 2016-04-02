@@ -63,7 +63,7 @@ class Utility:
                 else:
                     ipv4 += grp.lstrip('0') + '.'
             ipv4 = ipv4[0:-1]
-            #Da vedere se funziona
+            #TODO controllare se funziona ipv6
             ipv6 = stringa[t + 1:]
             return ipv4, ipv6
         else:
@@ -161,7 +161,6 @@ class Downloader:
             ind = ipv6
             sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
-        print(name)
         sock.connect((ind, int(pp2p)))
         sock.sendall(('RETR' + md5).encode())
 
@@ -169,6 +168,7 @@ class Downloader:
         recv_mess = sock.recv(10).decode()
         if recv_mess[:4] == "ARET":
             num_chunk = int(recv_mess[4:])
+            count_chunk = 0
 
             # apro il file per la scrittura
             f = open(Utility.PATHDIR+name.rstrip(' '), "wb")  # Apro il file rimuovendo gli spazi finali dal nome
