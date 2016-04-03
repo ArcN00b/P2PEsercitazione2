@@ -6,10 +6,14 @@ import threading
 
 class Utility:
 
-    MY_IPV4='127.000.000.001'
-    MY_IPV6='0000:0000:0000:0000:0000:0000:0000:0001'
+    MY_IPV4="172.030.007.007"
+    MY_IPV6="fc00:0000:0000:0000:0000:0000:0007:0007"
+
+    #MY_IPV4="127.000.000.001"
+    #MY_IPV6="0000:0000:0000:0000:0000:0000:0000:0001"
+
     PORT=3000
-    PATHDIR='/home/simone/Immagini/'
+    PATHDIR='/home/marco/seedfolder/'
 
     # Metodo che genera un numero random nel range [1024, 65535]
     @staticmethod
@@ -63,8 +67,16 @@ class Utility:
                 else:
                     ipv4 += grp.lstrip('0') + '.'
             ipv4 = ipv4[0:-1]
-            #TODO controllare se funziona ipv6
-            ipv6 = stringa[t + 1:]
+            # estrazione ipv6
+            ipv6 = ''
+            tmp = stringa[t+1:].split(':')
+            for grp in tmp:
+                w = grp.lstrip('0')
+                if len(w) != 0:
+                    ipv6 += w + ':'
+                else:
+                    ipv6 += '0:'
+            ipv6 = ipv6[0:-1]
             return ipv4, ipv6
         else:
             return '', ''

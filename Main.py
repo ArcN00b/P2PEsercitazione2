@@ -17,8 +17,8 @@ global listFindFile
 class Peer:
 
     def __init__(self,ipv4,ipv6):
-        self.ipv4=Utility.MY_IPV4
-        self.ipv6=Utility.MY_IPV6
+        self.ipv4=ipv4
+        self.ipv6=ipv6
         self.port=Utility.PORT                        # da sostituire con Utility.generatePort()
         self.stop_queue = queue.Queue(1)
         u1 = ReceiveServerIPV4(self.stop_queue,self.ipv4,self.port,(3,self.ipv4,self.port))
@@ -189,7 +189,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
             else:
                 print("ricevuto altro")
         else:
-            print("XX fine della ricezione XX")
+            print("\nXX fine della ricezione XX")
 
         self.close()
 
@@ -198,13 +198,14 @@ numFindFile=0
 listFindFile=[]
 database = ManageDB()
 # TODO completare con la lista dei near iniziali
+database.addClient(ip="172.030.007.003|fc00:0000:0000:000:0000:0000:0007:0003",port="3000")
 
 #database.addFile("1"*32, "live brixton.jpg")
 
 # i = db.findFile(md5="1"*32)
 # print("valore i: "+i[0][0])
-
-p=Peer("127.0.0.1","::1")
+ipv4, ipv6 = Utility.getIp(Utility.MY_IPV4 +"|" + Utility.MY_IPV6)
+p=Peer(ipv4,ipv6)
 #if not os.path.exists(pathDir):
 #    os.makedirs(pathDir)
 

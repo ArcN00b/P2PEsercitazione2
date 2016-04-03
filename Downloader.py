@@ -8,7 +8,7 @@ from Utility import Utility
 
 ip = "127.000.000.001|0000:0000:0000:0000:0000:0000:0000:0001"
 port = "03000"
-md5 = Utility.generateMd5(path="/home/marco/seedfolder/live brixton.jpg")
+md5 = Utility.generateMd5(path=Utility.PATHDIR + "live brixton.jpg")
 output = "/home/marco/pendulum.jpg"
 
 Utility.download(ipp2p=ip, pp2p=port, md5=md5, name=output)
