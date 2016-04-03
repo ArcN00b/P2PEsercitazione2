@@ -129,7 +129,6 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     f.close()
 
             elif(command == "QUER"):
-                # TODO è meglio mettere tutta l'esecuzione del metodo in un thread
                 msgRet = 'AQUE'
                 # Prendo i campi del messaggio ricevuto
                 pkID = fields[0]
@@ -159,8 +158,10 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     if int(ttl) > 1:
                         ttl='{:0>2}'.format(int(ttl)-1)
                         msg="QUER"+pkID+ipDest+portDest+ttl+name
-                        t2 = SenderAll(msg, database.listClient())
-                        t2.run()
+                        lista=database.listClient()
+                        if len(lista)>0:
+                            t2 = SenderAll(msg, lista)
+                            t2.run()
 
             elif command=="AQUE":
                 if database.checkPkt(fields[0])==True:
@@ -174,13 +175,20 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     print("Nome "+fields[4])
                     print("-----")
 
-            elif command=="NEAR": #TODO rispondere con un pacchetto ANEA
+            elif command=="NEAR":
                 if database.checkPkt(fields[0])==False and int(fields[3])>1:
                     database.addPkt(fields[0])
+                    ip=Utility.MY_IPV4+"|"+Utility.MY_IPV6
+                    port='{:0>5}'.format(Utility.PORT)
+                    msgRet="ANEA"+fields[0]+ip+port
+                    t=Sender(msgRet,fields[1],fields[2])
+                    t.run()
                     ttl='{:0>2}'.format(int(fields[3])-1)
                     msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
-                    t1 = SenderAll(msg, database.listClient())
-                    t1.run()
+                    lista=database.listClient()
+                    if len(lista)>0:
+                        t1 = SenderAll(msg,lista )
+                        t1.run()
 
             elif command=="ANEA":
                 if database.checkPkt(fields[0])==True:
@@ -217,6 +225,7 @@ while True:
     print("4. Rimuovi File")
     print("5. Visualizza File")
     print("6. Visualizza Vicini")
+    print("7. Aggiungi Vicino")
     print(" ")
     sel=input("Inserisci il numero del comando da eseguire ")
     if sel=="1":
@@ -232,8 +241,10 @@ while True:
         database.addPkt(pktID)
         numFindFile = 0
         listFindFile = []
-        t1 = SenderAll(msg, database.listClient())
-        t1.run()
+        lista=database.listClient()
+        if len(lista)>0:
+            t1 = SenderAll(msg, lista)
+            t1.run()
 
         # Ogni 3 secondi controllo di avere risposte
         while numFindFile == 0:
@@ -255,16 +266,17 @@ while True:
             t1.run()
 
     elif sel=="2":
-        pktID=Utility.generateId(16)
-        ip=Utility.MY_IPV4+'|'+Utility.MY_IPV6
-        port='{:0>5}'.format(Utility.PORT)
-        ttl='{:0>2}'.format(2)
-        msg="NEAR"+pktID+ip+port+ttl
-        database.addPkt(pktID)
         listaNear=database.listClient()
-        database.removeAllClient()
-        t1 = SenderAll(msg, listaNear)
-        t1.run()
+        if len(listaNear)>0:
+            pktID=Utility.generateId(16)
+            ip=Utility.MY_IPV4+'|'+Utility.MY_IPV6
+            port='{:0>5}'.format(Utility.PORT)
+            ttl='{:0>2}'.format(2)
+            msg="NEAR"+pktID+ip+port+ttl
+            database.addPkt(pktID)
+            database.removeAllClient()
+            t1 = SenderAll(msg, listaNear)
+            t1.run()
 
     elif sel=="3":
 
@@ -320,6 +332,30 @@ while True:
         print("IP e PORTA")
         for i in range(0,len(lista)):
             print("IP"+str(i)+" "+lista[i][0]+" "+lista[i][1])
+
+    elif sel=="7":
+        sel=input("Inserici Ipv4 ")
+        t=sel.split('.')
+        ipv4=""
+        ipv4=ipv4+'{:0>3}'.format(t[0])+'.'
+        ipv4=ipv4+'{:0>3}'.format(t[1])+'.'
+        ipv4=ipv4+'{:0>3}'.format(t[2])+'.'
+        ipv4=ipv4+'{:0>3}'.format(t[3])+'|'
+        sel=input("Inserici Ipv6 ")
+        t=sel.split(':')
+        ipv6=""
+        ipv6=ipv6+'{:0>4}'.format(t[0])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[1])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[2])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[3])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[4])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[5])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[6])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[7])
+        sel=input("Inserici Porta ")
+        port='{:0>5}'.format(int(sel))
+        ip=ipv4+ipv6
+        database.addClient(ip,port)
     else:
         sel=input("Commando Errato, attesa nuovo comando ")
 
