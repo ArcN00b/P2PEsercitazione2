@@ -218,7 +218,7 @@ numFindFile=0
 listFindFile=[]
 database = ManageDB()
 # TODO completare con la lista dei near iniziali
-database.addClient(ip="172.030.007.003|fc00:0000:0000:000:0000:0000:0007:0003",port="3000")
+database.addClient(ip="172.030.007.007|fc00:0000:0000:000:0000:0000:0007:0007",port="3000")
 
 #database.addFile("1"*32, "live brixton.jpg")
 
@@ -259,7 +259,7 @@ while True:
             t1.run()
 
         # Ogni 3 secondi controllo di avere risposte
-        while numFindFile == 0:
+        while numFindFile == 0 and database.checkPkt(pktID)==True:
             time.sleep(3)
 
         # Visualizzo le possibili scelte
@@ -378,5 +378,5 @@ while True:
         ip=ipv4+ipv6
         database.addClient(ip,port)
     else:
-        sel=input("Commando Errato, attesa nuovo comando ")
+        print("Commando Errato, attesa nuovo comando ")
 
