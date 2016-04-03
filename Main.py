@@ -218,7 +218,7 @@ numFindFile=0
 listFindFile=[]
 database = ManageDB()
 # TODO completare con la lista dei near iniziali
-database.addClient(ip="172.030.007.007|fc00:0000:0000:000:0000:0000:0007:0007",port="3000")
+database.addClient(ip="172.030.007.003|fc00:0000:0000:000:0000:0000:0007:0003",port="3000")
 
 #database.addFile("1"*32, "live brixton.jpg")
 
