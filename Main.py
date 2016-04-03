@@ -15,8 +15,9 @@ global listFindFile
 class Peer:
 
     def __init__(self,ipv4,ipv6):
-        self.ipv4=Utility.MY_IPV4
-        self.ipv6=Utility.MY_IPV6
+        self.ipv4=ipv4
+        self.ipv6=ipv6
+        #self.ipv4,self.ipv6=Utility.getIp(ipv4+'|'+ipv6)
         self.port=Utility.PORT                        # da sostituire con Utility.generatePort()
         self.stop_queue = queue.Queue(1)
         u1 = ReceiveServerIPV4(self.stop_queue,self.ipv4,self.port,(3,self.ipv4,self.port))
@@ -128,7 +129,6 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
 
             elif(command == "QUER"):
-                # TODO è meglio mettere tutta l'esecuzione del metodo in un thread
                 msgRet = 'AQUE'
                 # Prendo i campi del messaggio ricevuto
                 pkID = fields[0]
@@ -137,34 +137,36 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 ttl = fields[3]
                 file = fields[4]
 
-            # Controllo se il packetId è già presente se è presente non rispondo alla richiesta
-            # E non la rispedisco
-            if database.checkPkt(pkID)==False:
-                database.addPkt(pkID)
-                # Esegue la risposta ad una query
-                msgRet = msgRet + pkID
-                ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
-                port = '{:0>5}'.format(Utility.PORT)
-                msgRet = msgRet + ip + port
-                l = database.findMd5(file)
-                for i in range(0, len(l)):
-                    f = database.findFile(l[i][0])
-                    r = msgRet
-                    r = r + l[i][0] + f[0][0]
-                    t1 = Sender(r, ipDest, portDest)
-                    t1.run()
+                # Controllo se il packetId è già presente se è presente non rispondo alla richiesta
+                # E non la rispedisco
+                if database.checkPkt(pkID)==False:
+                    database.addPkt(pkID)
+                    # Esegue la risposta ad una query
+                    msgRet = msgRet + pkID
+                    ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
+                    port = '{:0>5}'.format(Utility.PORT)
+                    msgRet = msgRet + ip + port
+                    l = database.findMd5(file)
+                    for i in range(0, len(l)):
+                        f = database.findFile(l[i][0])
+                        r = msgRet
+                        r = r + l[i][0] + f[0][0]
+                        t1 = Sender(r, ipDest, portDest)
+                        t1.run()
 
-                # controllo se devo divulgare la query
-                if int(ttl) > 1:
-                    ttl='{:0>2}'.format(int(ttl)-1)
-                    msg="QUER"+pkID+ipDest+portDest+ttl+file
-                    t2 = SenderAll(msg, database.listClient())
-                    t2.run()
+                    # controllo se devo divulgare la query
+                    if int(ttl) > 1:
+                        ttl='{:0>2}'.format(int(ttl)-1)
+                        msg="QUER"+pkID+ipDest+portDest+ttl+file
+                        lista=database.listClient()
+                        if len(lista)>0:
+                            t2 = SenderAll(msg, lista)
+                            t2.run()
 
             elif command=="AQUE":
                 if database.checkPkt(fields[0])==True:
                     global numFindFile
-                    numFindFile=+=1
+                    numFindFile=numFindFile+1
                     listFindFile.append(fields)
                     print("-----")
                     print("Peer "+str(numFindFile))
@@ -173,13 +175,20 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     print("Nome "+fields[4])
                     print("-----")
 
-            elif command=="NEAR": #TODO rispondere con un pacchetto ANEA
+            elif command=="NEAR":
                 if database.checkPkt(fields[0])==False and int(fields[3])>1:
                     database.addPkt(fields[0])
+                    ip=Utility.MY_IPV4+"|"+Utility.MY_IPV6
+                    port='{:0>5}'.format(Utility.PORT)
+                    msgRet="ANEA"+fields[0]+ip+port
+                    t=Sender(msgRet,fields[1],fields[2])
+                    t.run()
                     ttl='{:0>2}'.format(int(fields[3])-1)
                     msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
-                    t1 = SenderAll(msg, database.listClient())
-                    t1.run()
+                    lista=database.listClient()
+                    if len(lista)>0:
+                        t1 = SenderAll(msg,lista )
+                        t1.run()
 
             elif command=="ANEA":
                 if database.checkPkt(fields[0])==True:
@@ -200,8 +209,12 @@ database = ManageDB()
 
 # i = db.findFile(md5="1"*32)
 # print("valore i: "+i[0][0])
-
-p=Peer("127.0.0.1","::1")
+sel=input('inserisci due ip ')
+ipv4=sel
+sel=input('inserisci due ip ')
+ipv6=sel
+p=Peer(ipv4,ipv6)
+#p=Peer(Utility.MY_IPV4,Utility.MY_IPV6)
 #if not os.path.exists(pathDir):
 #    os.makedirs(pathDir)
 
@@ -213,6 +226,7 @@ while True:
     print("4. Rimuovi File")
     print("5. Visualizza File")
     print("6. Visualizza Vicini")
+    print("7. Aggiungi Vicino")
     print(" ")
     sel=input("Inserisci il numero del comando da eseguire ")
     if sel=="1":
@@ -228,8 +242,10 @@ while True:
         database.addPkt(pktID)
         numFindFile = 0
         listFindFile = []
-        t1 = SenderAll(msg, database.listClient())
-        t1.run()
+        lista=database.listClient()
+        if len(lista)>0:
+            t1 = SenderAll(msg, lista)
+            t1.run()
 
         # Ogni 3 secondi controllo di avere risposte
         while numFindFile == 0:
@@ -251,16 +267,17 @@ while True:
             t1.run()
 
     elif sel=="2":
-        pktID=Utility.generateId(16)
-        ip=Utility.MY_IPV4+'|'+Utility.MY_IPV6
-        port='{:0>5}'.format(Utility.PORT)
-        ttl='{:0>2}'.format(2)
-        msg="NEAR"+pktID+ip+port+ttl
-        database.addPkt(pktID)
         listaNear=database.listClient()
-        database.removeAllClient()
-        t1 = SenderAll(msg, listaNear)
-        t1.run()
+        if len(listaNear)>0:
+            pktID=Utility.generateId(16)
+            ip=Utility.MY_IPV4+'|'+Utility.MY_IPV6
+            port='{:0>5}'.format(Utility.PORT)
+            ttl='{:0>2}'.format(2)
+            msg="NEAR"+pktID+ip+port+ttl
+            database.addPkt(pktID)
+            database.removeAllClient()
+            t1 = SenderAll(msg, listaNear)
+            t1.run()
 
     elif sel=="3":
 
@@ -316,6 +333,30 @@ while True:
         print("IP e PORTA")
         for i in range(0,len(lista)):
             print("IP"+str(i)+" "+lista[i][0]+" "+lista[i][1])
+
+    elif sel=="7":
+        sel=input("Inserici Ipv4 ")
+        t=sel.split('.')
+        ipv4=""
+        ipv4=ipv4+'{:0>3}'.format(t[0])+'.'
+        ipv4=ipv4+'{:0>3}'.format(t[1])+'.'
+        ipv4=ipv4+'{:0>3}'.format(t[2])+'.'
+        ipv4=ipv4+'{:0>3}'.format(t[3])+'|'
+        sel=input("Inserici Ipv6 ")
+        t=sel.split(':')
+        ipv6=""
+        ipv6=ipv6+'{:0>4}'.format(t[0])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[1])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[2])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[3])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[4])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[5])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[6])+':'
+        ipv6=ipv6+'{:0>4}'.format(t[7])
+        sel=input("Inserici Porta ")
+        port='{:0>5}'.format(int(sel))
+        ip=ipv4+ipv6
+        database.addClient(ip,port)
     else:
-        sel=input("Commando Errato, attesa nuovo comando ")
+        print("Commando Errato, attesa nuovo comando ")
 

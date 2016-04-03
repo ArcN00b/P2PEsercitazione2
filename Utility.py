@@ -6,10 +6,10 @@ import threading
 
 class Utility:
 
-    MY_IPV4='192.168.000.009'
+    MY_IPV4='172.030.007.001'
     MY_IPV6='FC00:0000:0000:0000:0000:0000:0007:0001'
     PORT=3000
-    PATHDIR='/home/simone/Immagini/'
+    PATHDIR='/home/flavio/Scrivania/File/'
 
     # Metodo che genera un numero random nel range [1024, 65535]
     @staticmethod
