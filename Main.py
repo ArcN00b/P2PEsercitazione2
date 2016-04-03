@@ -4,8 +4,6 @@ import os
 import asyncore
 import socket
 import threading
-from fileinput import filename
-
 from ManageDB import *
 from Parser import *
 from Utility import *
@@ -196,8 +194,17 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                         t1.run()
 
             elif command=="ANEA":
-                if database.checkPkt(fields[0])==True:
-                    database.addClient(fields[1],fields[2])
+                lista=database.listClient()
+                find=False
+                pkID=fields[0]
+                ip=fields[1]
+                port=fields[2]
+                for i in range(0,len(lista)):
+                    if lista[i][0]==ip and lista[i][1]==port:
+                        find=True
+                if database.checkPkt(pkID)==True and find==False:
+                    database.addClient(ip,port)
+
 
             else:
                 print("ricevuto altro")
