@@ -40,8 +40,8 @@ while True:
         b='IPV6 '
         sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
-    sock.connect((a, 2500))
-    a="NEAR1234567890123452"+ip+port+'08'
+    sock.connect((a, 3000))
+    a="ANEA1234567890123452"+ip+port
     sock.sendall(a.encode())
     time.sleep(1)
     s=sock.recv(2048)

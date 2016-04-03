@@ -146,7 +146,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
                     port = '{:0>5}'.format(Utility.PORT)
                     msgRet = msgRet + ip + port
-                    l = database.findMd5(file)
+                    l = database.findMd5(file.strip())
                     for i in range(0, len(l)):
                         f = database.findFile(l[i][0])
                         r = msgRet
@@ -191,8 +191,17 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                         t1.run()
 
             elif command=="ANEA":
-                if database.checkPkt(fields[0])==True:
-                    database.addClient(fields[1],fields[2])
+                lista=database.listClient()
+                find=False
+                pkID=fields[0]
+                ip=fields[1]
+                port=fields[2]
+                for i in range(0,len(lista)):
+                    if lista[i][0]==ip and lista[i][1]==port:
+                        find=True
+                if database.checkPkt(pkID)==True and find==False:
+                    database.addClient(ip,port)
+
 
             else:
                 print("ricevuto altro")
@@ -248,7 +257,7 @@ while True:
             t1.run()
 
         # Ogni 3 secondi controllo di avere risposte
-        while numFindFile == 0:
+        while numFindFile == 0 and database.checkPkt(pktID)==True:
             time.sleep(3)
 
         # Visualizzo le possibili scelte
