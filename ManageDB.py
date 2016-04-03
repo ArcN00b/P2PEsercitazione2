@@ -29,10 +29,7 @@ class ManageDB:
             c.execute("DROP TABLE IF EXISTS PACKETS")
             c.execute("CREATE TABLE PACKETS (ID TEXT NOT NULL, DATE INTEGER NOT NULL)")
 
-            '''
-            # Creo la lista dei pktid
-            self.__pkIdList = []
-            '''
+            #conn.isolation_level = None
 
             conn.commit()
 
@@ -59,8 +56,12 @@ class ManageDB:
             conn = sqlite3.connect("data.db")
             c = conn.cursor()
 
-            # Aggiungo il client
-            c.execute("INSERT INTO CLIENTS (IP, PORT) VALUES (?,?)" , (ip, port))
+            # Aggiungo il client se non e'presente
+            c.execute("SELECT COUNT(IP) FROM CLIENTS WHERE IP=:INDIP AND PORT=:PORTA", {"INDIP": ip, "PORTA": port})
+            count = c.fetchall()
+
+            if(count[0][0] == 0):
+                c.execute("INSERT INTO CLIENTS (IP, PORT) VALUES (?,?)" , (ip, port))
             conn.commit()
 
         except sqlite3.Error as e:
@@ -343,6 +344,38 @@ class ManageDB:
             if conn:
                 conn.close()
 
+    # Metodo che ricerca un peer, ritorna True se e' presente, altrimenti False
+    def checkClient(self, ip, port):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Verifico se e' presente il peer
+            c.execute("SELECT COUNT(IP) FROM CLIENTS WHERE IP=:INDIP AND PORT=:PORTA", {"INDIP": ip, "PORTA": port})
+            conn.commit()
+
+            count  = c.fetchall()
+
+            # Ritorno True se il peer e' presente, altrimenti False
+            if(count[0][0] == 1):
+                return True
+            elif(count[0][0] == 0):
+                return False
+            else:
+                raise Exception("Errore - checkClient: peer multipli con stesso ip e port")
+
+        except sqlite3.Error as e:
+
+            raise Exception("Errore - checkClient: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
     # Metodo che ritorna la lista dei file
     def listFile(self):
         try:
@@ -367,6 +400,38 @@ class ManageDB:
             if conn:
                 conn.close()
 
+    # Metodo che ricerca un file, ritorna True se e' presente, altrimenti False
+    def checkFile(self, md5):
+        try:
+
+            # Creo la connessione al database e creo un cursore ad esso
+            conn = sqlite3.connect("data.db")
+            c = conn.cursor()
+
+            # Verifico se e' presente il file
+            c.execute("SELECT COUNT(MD5) FROM FILES WHERE MD5=:COD", {"COD": md5})
+            conn.commit()
+
+            count  = c.fetchall()
+
+            # Ritorno True se il file e' presente, altrimenti False
+            if(count[0][0] == 1):
+                return True
+            elif(count[0][0] == 0):
+                return False
+            else:
+                raise Exception("Errore - checkFile: file multipli con stesso md5")
+
+        except sqlite3.Error as e:
+
+            raise Exception("Errore - checkFile: %s:" % e.args[0])
+
+        finally:
+
+            # Chiudo la connessione
+            if conn:
+                conn.close()
+
     # Metodo che aggiunge un packetId
     def addPkt(self, id):
         try:
@@ -377,7 +442,14 @@ class ManageDB:
 
             # Rimuovo i packets meno recenti ed aggiungo il packet
             c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
-            c.execute("INSERT INTO PACKETS (ID, DATE) VALUES ( ?, DATETIME('NOW'))" , (id,))
+            conn.commit()
+
+            # Inserisco il packet solamento se non presente
+            c.execute("SELECT COUNT(ID) FROM PACKETS WHERE ID=:COD", {"COD": id})
+            count = c.fetchall()
+            if(count[0][0] == 0):
+                c.execute("INSERT INTO PACKETS (ID, DATE) VALUES ( ?, DATETIME('NOW'))" , (id,))
+
             conn.commit()
 
         except sqlite3.Error as e:
@@ -404,6 +476,7 @@ class ManageDB:
 
             # Rimuovo il packet ed elimino i packets meno recenti
             c.execute("DELETE FROM PACKETS WHERE ID=:COD" , {"COD": id} )
+            conn.commit()
             c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
             conn.commit()
 
@@ -431,6 +504,7 @@ class ManageDB:
 
             # Elimino i packets meno recenti e prelevo la lista di packets
             c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
+            conn.commit()
             c.execute("SELECT ID FROM PACKETS")
             conn.commit()
 
@@ -478,6 +552,7 @@ class ManageDB:
 
             # Elimino i packets meno recenti e verifico se e' presente il packet
             c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
+            conn.commit()
             c.execute("SELECT COUNT(ID) FROM PACKETS WHERE ID=:COD" , {"COD": id} )
             conn.commit()
 
@@ -504,45 +579,6 @@ class ManageDB:
 
 
 '''
-    # Metodo che aggiunge un packetId
-    def addPkt(self, id):
-
-        # Aggiungo il packetId
-        self.__pkIdList.append(id)
-
-    # Metodo che rimuove un packetId
-    def removePkt(self, id):
-
-        # Rimuovo il packetId
-        self.__pkIdList.remove(id)
-
-        # Se e' presente un altro packetId uguale, genero una eccezione
-        if(self.__pkIdList.count(id) > 0):
-            raise Exception("Errore - removePkt: packetId multipli con stesso id")
-
-    # Metodo che ritorna la lista dei packetId
-    def listPkt(self):
-
-        # Ritorno tutti i packetId in una lista differente
-        return list(self.__pkIdList)
-
-    # Metodo che ricerca un packetId
-    def searchPkt(self, id):
-
-        count = self.__pkIdList.count(id)
-
-        # Ritorno True se il packet e' presente, altrimenti False
-        if(count == 1):
-            return True
-        elif(count == 0):
-            return False
-        else:
-            raise Exception("Errore - searchPkt: packetId multipli con stesso id")
-
-'''
-
-
-'''
 
 # TEST PACKETID CON DATABASE
 manager = ManageDB()
@@ -558,6 +594,8 @@ all_rows = manager.listPkt()
 for row in all_rows:
     print('{0}'.format(row[0]))
 print("")
+
+
 
 # Cerco un packet
 print("Ricerco un packet")
@@ -602,55 +640,6 @@ print("")
 
 
 '''
-# TEST PACKETID CON LISTA
-manager = ManageDB()
-
-# Inserisco packet
-print("1) Inserisco packet")
-manager.addPkt(1)
-manager.addPkt(2)
-manager.addPkt(3)
-
-print("Packet presenti")
-print(manager.listPkt())
-print("")
-
-
-# Rimuovo packet
-print("2) Rimuovo packet")
-manager.removePkt(3)
-
-print("Packet presenti")
-print(manager.listPkt())
-print("")
-
-
-# Inserisco packet dalla lista di copia
-print("3) Aggiungo packet alla lista di copia")
-manager.listPkt().append(5)
-
-print("Packet presenti")
-print(manager.listPkt())
-print("")
-
-
-# Ricerco un packet
-print("4) Ricerco un packet presente")
-
-print(manager.searchPkt(1))
-print("")
-
-
-# Ricerco un packet
-print("5) Ricerco un packet non presente")
-
-print(manager.searchPkt(100))
-print("")
-
-'''
-
-
-'''
 
 # TEST CLIENTS E FILES
 manager = ManageDB()
@@ -660,12 +649,21 @@ print("1) Inserisco peer")
 manager.addClient("1.1.1.1","1")
 manager.addClient("1.1.1.1","2")
 manager.addClient("2.2.2.2","2")
+manager.addClient("2.2.2.2","2")
 
 print("Peer presenti")
 all_rows = manager.listClient()
 for row in all_rows:
     print('{0} : {1}'.format(row[0], row[1]))
 print("")
+
+if (manager.checkClient("1.1.1.1","1")):
+    print("True: peer presente")
+else:
+    print("False: peer non presente")
+print("")
+
+
 
 print("Rimuovo tutti i peer")
 manager.removeAllClient()
@@ -691,9 +689,11 @@ for row in all_rows:
 print("")
 
 
+
 # Inserimento file
 print("3) Inserisco file")
 manager.addFile("123", "pippo")
+
 manager.addFile("345", "pluto")
 manager.addFile("567", "paperino")
 manager.addFile("789", "topolino")
@@ -703,6 +703,14 @@ all_rows = manager.listFile()
 for row in all_rows:
     print('{0} : {1}'.format(row[0], row[1]))
 print("")
+
+
+if (manager.checkFile("123")):
+    print("True: file presente")
+else:
+    print("False: file non presente")
+print("")
+
 
 
 # Rimozione file
