@@ -150,7 +150,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     for i in range(0, len(l)):
                         f = database.findFile(l[i][0])
                         r = msgRet
-                        r = r + l[i][0] + str(f[0][0]).ljust(width=100, fillchar=' ')
+                        r = r + l[i][0] + str(f[0][0]).ljust(100, ' ')
                         t1 = Sender(r, ipDest, portDest)
                         t1.run()
 
@@ -164,15 +164,20 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                             t2.run()
 
             elif command=="AQUE":
-                if database.checkPkt(fields[0])==True:
+                pkID = fields[0]
+                if database.checkPkt(pkID)==True:
                     global numFindFile
                     numFindFile+=1
+                    ipServer = fields[1]
+                    portServer = fields[2]
+                    md5file = fields[3]
+                    filename = str(fields[4]).strip()
                     listFindFile.append(fields)
                     print("-----")
                     print("Peer "+str(numFindFile))
-                    print("IP "+fields[1]+fields[2])
-                    print("MD5 "+fields[3])
-                    print("Nome "+fields[4])
+                    print("IP "+ipServer+" PORT: " + portServer)
+                    print("MD5 "+md5file)
+                    print("Nome "+filename)
                     print("-----")
 
             elif command=="NEAR":
@@ -196,8 +201,8 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
             else:
                 print("ricevuto altro")
-        else:
-            print("\nXX fine della ricezione XX")
+        #else:
+          #  print("\nXX fine della ricezione XX")
 
         self.close()
 
