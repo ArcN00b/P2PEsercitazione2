@@ -202,7 +202,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
             else:
                 print("ricevuto altro")
         #else:
-          #  print("\nXX fine della ricezione XX")
+         #   print("\nXX fine della ricezione XX")
 
         self.close()
 
@@ -211,7 +211,7 @@ numFindFile=0
 listFindFile=[]
 database = ManageDB()
 # TODO completare con la lista dei near iniziali
-database.addClient(ip="172.030.007.003|fc00:0000:0000:000:0000:0000:0007:0003",port="3000")
+database.addClient(ip="172.030.007.007|fc00:0000:0000:000:0000:0000:0007:0007",port="3000")
 
 #database.addFile("1"*32, "live brixton.jpg")
 
@@ -241,7 +241,7 @@ while True:
         ip=Utility.MY_IPV4+'|'+Utility.MY_IPV6
         port='{:0>5}'.format(Utility.PORT)
         ttl='{:0>2}'.format(5)
-        search=sel.ljust(width=20,fillchar=' ')
+        search=sel.ljust(20,' ')
         msg="QUER"+pktID+ip+port+ttl+search
         database.addPkt(pktID)
         numFindFile = 0
@@ -259,15 +259,24 @@ while True:
         print("Scelta  PEER                                                        MD5                       Nome")
         print("0 Non scaricare nulla")
         for i in range(0,numFindFile):
-            print(str(i + 1) + " " + listFindFile[i][1] + " " + listFindFile[i][3] + " " + listFindFile[i][4])
+            ipp2p = listFindFile[i][1]
+            md5file = listFindFile[i][3]
+            filename = listFindFile[i][4]
+            print(str(i + 1) + " " + ipp2p + " " + md5file + " " + filename)
 
         # Chiedo quale file scaricare
         i = -1
-        while i not in range(1, numFindFile +1):
-            i = int(input("Scegli il file da scaricare oppure no ")) - 1
+        while i not in range(0, numFindFile +1):
+            i = int(input("Scegli il file da scaricare oppure no "))
 
         if i > 0:
-            t1 = Downloader(listFindFile[i][1], listFindFile[i][2], listFindFile[i][3], listFindFile[i][4])
+            i = i - 1;
+            ipp2p = listFindFile[i][1]
+            pp2p = listFindFile[i][2]
+            md5file = listFindFile[i][3]
+            filename = str(listFindFile[i][4]).strip()
+
+            t1 = Downloader(ipp2p, pp2p, md5file, filename)
             t1.run()
 
     elif sel=="2":
