@@ -44,8 +44,4 @@ while True:
     a="ANEA1234567890123452"+ip+port
     sock.sendall(a.encode())
     time.sleep(1)
-    s=sock.recv(2048)
-    while len(s)>0:
-        s=sock.recv(2048)
-        print(s.decoce())
     sock.close()

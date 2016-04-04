@@ -6,14 +6,14 @@ import threading
 
 class Utility:
 
-    MY_IPV4="172.030.007.003"
-    MY_IPV6="fc00:0000:0000:0000:0000:0000:0007:0003"
+    MY_IPV4="172.030.007.001"
+    MY_IPV6="fc00:0000:0000:0000:0000:0000:0007:0001"
 
     #MY_IPV4="127.000.000.001"
     #MY_IPV6="0000:0000:0000:0000:0000:0000:0000:0001"
 
     PORT=3000
-    PATHDIR='/home/marco/seedfolder/'
+    PATHDIR='/home/flavio/Scrivania/File/'
 
     # Metodo che genera un numero random nel range [1024, 65535]
     @staticmethod
@@ -98,19 +98,22 @@ class Sender:
            # print("errore: ", e)
 
     def sendMessage(self, messaggio, ip, porta):
-        r = 0  # random.randrange(0, 100)
-        ipv4, ipv6 = Utility.getIp(ip)
-        if r < 50:
-            a = ipv4
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        else:
-            a = ipv6
-            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        try:
+            r = 0  # random.randrange(0, 100)
+            ipv4, ipv6 = Utility.getIp(ip)
+            if r < 50:
+                a = ipv4
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            else:
+                a = ipv6
+                sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
-        sock.connect((a, int(porta)))
-        print('inviato: '+messaggio)
-        sock.sendall(messaggio.encode())
-        sock.close()
+            sock.connect((a, int(porta)))
+            print('inviato: '+messaggio)
+            sock.sendall(messaggio.encode())
+            sock.close()
+        except Exception:
+            print("Errore Peer down "+ip+" "+porta)
 
 class SenderAll:
     # Costruttore che inizializza gli attributi del Worker
@@ -133,18 +136,21 @@ class SenderAll:
 
     def sendMessage(self, messaggio, ip, porta):
         r = 0  # random.randrange(0, 100)
-        ipv4, ipv6 = Utility.getIp(ip)
-        if r < 50:
-            a = ipv4
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        else:
-            a = ipv6
-            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        try:
+            ipv4, ipv6 = Utility.getIp(ip)
+            if r < 50:
+                a = ipv4
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            else:
+                a = ipv6
+                sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
-        sock.connect((a, int(porta)))
-        print('inviato: '+messaggio)
-        sock.sendall(messaggio.encode())
-        sock.close()
+            sock.connect((a, int(porta)))
+            print('inviato: '+messaggio)
+            sock.sendall(messaggio.encode())
+            sock.close()
+        except Exception:
+            print("Errore Peer down "+ip+" "+porta)
 
 class Downloader:
     # Costruttore che inizializza gli attributi del Worker

@@ -218,7 +218,7 @@ numFindFile=0
 listFindFile=[]
 database = ManageDB()
 # TODO completare con la lista dei near iniziali
-database.addClient(ip="172.030.007.007|fc00:0000:0000:000:0000:0000:0007:0007",port="3000")
+database.addClient(ip="172.030.007.004|fc00:0000:0000:000:0000:0000:0007:0004",port="3000")
 
 #database.addFile("1"*32, "live brixton.jpg")
 
@@ -260,7 +260,7 @@ while True:
 
         # Ogni 3 secondi controllo di avere risposte
         while numFindFile == 0 and database.checkPkt(pktID)==True:
-            time.sleep(3)
+            True
 
         # Visualizzo le possibili scelte
         print("Scelta  PEER                                                        MD5                       Nome")
