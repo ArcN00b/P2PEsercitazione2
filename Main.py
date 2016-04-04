@@ -144,7 +144,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
                     port = '{:0>5}'.format(Utility.PORT)
                     msgRet = msgRet + ip + port
-                    l = database.findMd5(name.strip())
+                    l = database.findMd5(name.strip(' '))
                     for i in range(0, len(l)):
                         f = database.findFile(l[i][0])
                         r = msgRet
@@ -153,7 +153,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                         t1.run()
 
                     # controllo se devo divulgare la query
-                    if int(ttl) > 1:
+                    if int(ttl) >= 1:
                         ttl='{:0>2}'.format(int(ttl)-1)
                         msg="QUER"+pkID+ipDest+portDest+ttl+name
                         lista=database.listClient()
@@ -171,27 +171,24 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     md5file = fields[3]
                     filename = str(fields[4]).strip()
                     listFindFile.append(fields)
-                    print("-----")
-                    print("Peer "+str(numFindFile))
-                    print("IP "+ipServer+" PORT: " + portServer)
-                    print("MD5 "+md5file)
-                    print("Nome "+filename)
-                    print("-----")
+                    print(str(numFindFile) + " " + ipServer + " " + md5file + " " + filename)
 
             elif command=="NEAR":
-                if database.checkPkt(fields[0])==False and int(fields[3])>1:
+                if database.checkPkt(fields[0])==False:
                     database.addPkt(fields[0])
                     ip=Utility.MY_IPV4+"|"+Utility.MY_IPV6
                     port='{:0>5}'.format(Utility.PORT)
                     msgRet="ANEA"+fields[0]+ip+port
                     t=Sender(msgRet,fields[1],fields[2])
                     t.run()
-                    ttl='{:0>2}'.format(int(fields[3])-1)
-                    msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
-                    lista=database.listClient()
-                    if len(lista)>0:
-                        t1 = SenderAll(msg,lista )
-                        t1.run()
+                    ttl = int(fields[3])-1
+                    if ttl > 0:
+                        ttl='{:0>2}'.format(ttl)
+                        msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
+                        lista=database.listClient()
+                        if len(lista)>0:
+                            t1 = SenderAll(msg,lista )
+                            t1.run()
 
             elif command=="ANEA":
                 lista=database.listClient()
@@ -218,7 +215,8 @@ numFindFile=0
 listFindFile=[]
 database = ManageDB()
 # TODO completare con la lista dei near iniziali
-database.addClient(ip="172.030.007.004|fc00:0000:0000:000:0000:0000:0007:0004",port="3000")
+database.addClient(ip="172.030.007.001|fc00:0000:0000:000:0000:0000:0007:0001",port="3000")
+database.addClient(ip="172.030.007.002|fc00:0000:0000:000:0000:0000:0007:0002",port="3000")
 
 #database.addFile("1"*32, "live brixton.jpg")
 
@@ -258,23 +256,17 @@ while True:
             t1 = SenderAll(msg, lista)
             t1.run()
 
-        # Ogni 3 secondi controllo di avere risposte
-        while numFindFile == 0 and database.checkPkt(pktID)==True:
-            True
-
         # Visualizzo le possibili scelte
         print("Scelta  PEER                                                        MD5                       Nome")
-        print("0 Non scaricare nulla")
-        for i in range(0,numFindFile):
-            ipp2p = listFindFile[i][1]
-            md5file = listFindFile[i][3]
-            filename = listFindFile[i][4]
-            print(str(i + 1) + " " + ipp2p + " " + md5file + " " + filename)
 
         # Chiedo quale file scaricare
         i = -1
         while i not in range(0, numFindFile +1):
-            i = int(input("Scegli il file da scaricare oppure no "))
+            i = int(input("Scegli il file da scaricare oppure no (0 Non scarica nulla)\n"))
+
+        # Ogni 3 secondi controllo di avere risposte
+        while numFindFile == 0 and database.checkPkt(pktID)==True:
+            True
 
         if i > 0:
             i = i - 1;
