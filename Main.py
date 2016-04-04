@@ -144,7 +144,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     ip = Utility.MY_IPV4 + '|' + Utility.MY_IPV6
                     port = '{:0>5}'.format(Utility.PORT)
                     msgRet = msgRet + ip + port
-                    l = database.findMd5(name.strip())
+                    l = database.findMd5(name.strip(' '))
                     for i in range(0, len(l)):
                         f = database.findFile(l[i][0])
                         r = msgRet
@@ -153,7 +153,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                         t1.run()
 
                     # controllo se devo divulgare la query
-                    if int(ttl) > 1:
+                    if int(ttl) >= 1:
                         ttl='{:0>2}'.format(int(ttl)-1)
                         msg="QUER"+pkID+ipDest+portDest+ttl+name
                         lista=database.listClient()
@@ -179,19 +179,20 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                     print("-----")
 
             elif command=="NEAR":
-                if database.checkPkt(fields[0])==False and int(fields[3])>1:
+                if database.checkPkt(fields[0])==False:
                     database.addPkt(fields[0])
                     ip=Utility.MY_IPV4+"|"+Utility.MY_IPV6
                     port='{:0>5}'.format(Utility.PORT)
                     msgRet="ANEA"+fields[0]+ip+port
                     t=Sender(msgRet,fields[1],fields[2])
                     t.run()
-                    ttl='{:0>2}'.format(int(fields[3])-1)
-                    msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
-                    lista=database.listClient()
-                    if len(lista)>0:
-                        t1 = SenderAll(msg,lista )
-                        t1.run()
+                    if fields[3]>=1:
+                        ttl='{:0>2}'.format(int(fields[3])-1)
+                        msg="NEAR"+fields[0]+fields[1]+fields[2]+ttl
+                        lista=database.listClient()
+                        if len(lista)>0:
+                            t1 = SenderAll(msg,lista )
+                            t1.run()
 
             elif command=="ANEA":
                 lista=database.listClient()
