@@ -73,12 +73,9 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
         self.near_address = near_address
         self.data_tuple = data
 
-    # Questo e il metodo che viene chiamato quando ci sono delle recive
-    def handle_read(self):
+    def response(self,data):
+        # Metodo gestisce tutto
 
-        # Ricevo i dati dal socket ed eseguo il parsing
-        data = self.recv(2048)
-        # controllo lunghezza dati ricevuta
         if len(data) > 0:
             # converto i comandi
             command, fields = Parser.parse(data.decode())
@@ -205,8 +202,19 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
             else:
                 print("ricevuto altro")
-        #else:
-         #   print("\nXX fine della ricezione XX")
+
+
+    # Questo e il metodo che viene chiamato quando ci sono delle recive
+    def handle_read(self):
+
+        # Ricevo i dati dal socket ed eseguo il parsing
+        data = self.recv(2048)
+        # controllo lunghezza dati ricevuta
+        try:
+            self.response(data)
+        except Exception:
+            self.response(data)
+
 
         self.close()
 
@@ -275,8 +283,12 @@ while True:
             md5file = listFindFile[i][3]
             filename = str(listFindFile[i][4]).strip()
 
-            t1 = Downloader(ipp2p, pp2p, md5file, filename)
-            t1.run()
+            try:
+                t1 = Downloader(ipp2p, pp2p, md5file, filename)
+                t1.run()
+            except Exception:
+                t1 = Downloader(ipp2p, pp2p, md5file, filename)
+                t1.run()
 
     elif sel=="2":
         listaNear=database.listClient()
