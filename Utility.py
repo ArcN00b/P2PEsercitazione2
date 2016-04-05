@@ -108,8 +108,10 @@ class Sender:
                 a = ipv6
                 sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
+            sock.settimeout(2)
             sock.connect((a, int(porta)))
-            print('inviato: '+messaggio)
+            sock.settimeout(None)
+            print('inviato a ' + a + ' : ' + messaggio)
             sock.sendall(messaggio.encode())
             sock.close()
         except Exception:
@@ -126,13 +128,11 @@ class SenderAll:
     # Funzione che lancia il worker e controlla la chiusura improvvisa
     def run(self):
         #try:
-            self.sendAllNear()
+        for i in range(0, len(self.listaNear)):
+            self.sendMessage(self.messaggio, self.listaNear[i][0], self.listaNear[i][1])
         #except Exception as e:
            # print("errore: ", e)
 
-    def sendAllNear(self):
-        for i in range(0, len(self.listaNear)):
-            self.sendMessage(self.messaggio, self.listaNear[i][0], self.listaNear[i][1])
 
     def sendMessage(self, messaggio, ip, porta):
         r = 0  # random.randrange(0, 100)
@@ -145,8 +145,10 @@ class SenderAll:
                 a = ipv6
                 sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
+            sock.settimeout(2)
             sock.connect((a, int(porta)))
-            print('inviato: '+messaggio)
+            sock.settimeout(None)
+            print('inviato a '+a+' : '+messaggio)
             sock.sendall(messaggio.encode())
             sock.close()
         except Exception:
@@ -197,10 +199,22 @@ class Downloader:
                 tmp = sock.recv(5) #leggo la lunghezza del chunk
                 while len(tmp) < 5:
                     tmp += sock.recv(5 - len(tmp))
+                    if len(tmp) == 0:
+                        raise Exception("Socket close")
+
+                # Eseguo controlli di coerenza su ciò che viene ricavato dal socket
+                if tmp.decode(errors='ignore').isnumeric() == False:
+                    raise Exception("Packet loss")
                 chunklen = int(tmp.decode())
                 buffer = sock.recv(chunklen)  # Leggo il contenuto del chunk
+
+                # Leggo i dati del file dal socket
                 while len(buffer) < chunklen:
-                    buffer += sock.recv(chunklen-len(buffer))
+                    tmp = sock.recv(chunklen-len(buffer))
+                    buffer += tmp
+                    if len(tmp) == 0:
+                        raise Exception("Socket close")
+
                 f.write(buffer)  # Scrivo il contenuto del chunk nel file
 
             f.close()

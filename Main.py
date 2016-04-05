@@ -69,16 +69,14 @@ class ReceiveServerIPV6(asyncore.dispatcher):
 class ReceiveHandler(asyncore.dispatcher_with_send):
 
     def __init__(self, conn_sock, near_address, data):
+        self.dataRec=''
         asyncore.dispatcher_with_send.__init__(self,conn_sock)
         self.near_address = near_address
         self.data_tuple = data
 
-    # Questo e il metodo che viene chiamato quando ci sono delle recive
-    def handle_read(self):
+    def response(self,data):
+        # Metodo gestisce tutto
 
-        # Ricevo i dati dal socket ed eseguo il parsing
-        data = self.recv(2048)
-        # controllo lunghezza dati ricevuta
         if len(data) > 0:
             # converto i comandi
             command, fields = Parser.parse(data.decode())
@@ -205,10 +203,27 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
             else:
                 print("ricevuto altro")
-        #else:
-         #   print("\nXX fine della ricezione XX")
 
         self.close()
+
+
+    # Questo e il metodo che viene chiamato quando ci sono delle recive
+    def handle_read(self):
+
+        # Ricevo i dati dal socket ed eseguo il parsing
+        self.dataRec = self.recv(2048)
+        # controllo lunghezza dati ricevuta
+        #try:
+        self.response(self.dataRec)
+        #except Exception:
+        #    self.response(self.dataRec)
+        self.close()
+
+    def handle_error(self):
+        self.response(self.dataRec)
+
+    def handle_expt(self):
+        print("Eccezione out_buffer")
 
 
 numFindFile=0
@@ -263,20 +278,24 @@ while True:
         i = -1
         while i not in range(0, numFindFile +1):
             i = int(input("Scegli il file da scaricare oppure no (0 Non scarica nulla)\n"))
+            if database.checkPkt(pktID) == False:
+                break
 
-        # Ogni 3 secondi controllo di avere risposte
-        while numFindFile == 0 and database.checkPkt(pktID)==True:
-            True
+        if numFindFile == 0:
+            print ("Nessun risultato di ricerca ricevuto")
 
-        if i > 0:
+        elif i > 0:
             i = i - 1;
             ipp2p = listFindFile[i][1]
             pp2p = listFindFile[i][2]
             md5file = listFindFile[i][3]
             filename = str(listFindFile[i][4]).strip()
 
-            t1 = Downloader(ipp2p, pp2p, md5file, filename)
-            t1.run()
+            try:
+                t1 = Downloader(ipp2p, pp2p, md5file, filename)
+                t1.run()
+            except Exception as e:
+                print(e)
 
     elif sel=="2":
         listaNear=database.listClient()
