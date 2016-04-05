@@ -108,7 +108,9 @@ class Sender:
                 a = ipv6
                 sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
+            sock.settimeout(2)
             sock.connect((a, int(porta)))
+            sock.settimeout(None)
             print('inviato a ' + a + ' : ' + messaggio)
             sock.sendall(messaggio.encode())
             sock.close()
@@ -126,13 +128,11 @@ class SenderAll:
     # Funzione che lancia il worker e controlla la chiusura improvvisa
     def run(self):
         #try:
-            self.sendAllNear()
+        for i in range(0, len(self.listaNear)):
+            self.sendMessage(self.messaggio, self.listaNear[i][0], self.listaNear[i][1])
         #except Exception as e:
            # print("errore: ", e)
 
-    def sendAllNear(self):
-        for i in range(0, len(self.listaNear)):
-            self.sendMessage(self.messaggio, self.listaNear[i][0], self.listaNear[i][1])
 
     def sendMessage(self, messaggio, ip, porta):
         r = 0  # random.randrange(0, 100)
@@ -145,7 +145,9 @@ class SenderAll:
                 a = ipv6
                 sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
+            sock.settimeout(2)
             sock.connect((a, int(porta)))
+            sock.settimeout(None)
             print('inviato a '+a+' : '+messaggio)
             sock.sendall(messaggio.encode())
             sock.close()
