@@ -83,7 +83,7 @@ class ReceiveHandler(asyncore.dispatcher):
 
             if command == "RETR":
                 # Imposto la lunghezza dei chunk e ottengo il nome del file a cui corrisponde l'md5
-                chuncklen = 1024;
+                chuncklen = 512
                 peer_md5 = fields[0]
                 obj = database.findFile(peer_md5)
 
@@ -306,6 +306,9 @@ while True:
             t1.run()
 
     elif sel=="3":
+
+        # Rimuovo i file presenti al momento nel database
+        database.removeAllFile()
 
         #Ottengo la lista dei file dalla cartella corrente
         lst = os.listdir(Utility.PATHDIR)
