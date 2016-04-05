@@ -70,6 +70,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
     def __init__(self, conn_sock, near_address, data):
         asyncore.dispatcher_with_send.__init__(self,conn_sock)
+        self.dataRec = ''
         self.near_address = near_address
         self.data_tuple = data
 
@@ -199,24 +200,31 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 if database.checkPkt(pkID)==True and find==False:
                     database.addClient(ip,port)
 
-
             else:
                 print("ricevuto altro")
+
+        self.close()
 
 
     # Questo e il metodo che viene chiamato quando ci sono delle recive
     def handle_read(self):
 
         # Ricevo i dati dal socket ed eseguo il parsing
-        data = self.recv(2048)
+        self.dataRec = self.recv(2048)
         # controllo lunghezza dati ricevuta
-        try:
-            self.response(data)
-        except Exception:
-            self.response(data)
+        #try:
+        self.response(self.dataRec)
+        #except Exception:
+        #    self.response(data)
 
 
         self.close()
+
+    def handle_error(self):
+        self.response(self.dataRec)
+
+    def handle_expt(self):
+        print("Eccezione out_buffer")
 
 
 numFindFile=0
@@ -287,9 +295,8 @@ while True:
             try:
                 t1 = Downloader(ipp2p, pp2p, md5file, filename)
                 t1.run()
-            except Exception:
-                t1 = Downloader(ipp2p, pp2p, md5file, filename)
-                t1.run()
+            except Exception as e:
+                print(e)
 
     elif sel=="2":
         listaNear=database.listClient()
