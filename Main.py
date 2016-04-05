@@ -224,7 +224,7 @@ listFindFile=[]
 database = ManageDB()
 # TODO completare con la lista dei near iniziali
 database.addClient(ip="172.030.007.001|fc00:0000:0000:000:0000:0000:0007:0001",port="3000")
-database.addClient(ip="172.030.007.002|fc00:0000:0000:000:0000:0000:0007:0002",port="3000")
+#database.addClient(ip="172.030.007.002|fc00:0000:0000:000:0000:0000:0007:0002",port="3000")
 
 #database.addFile("1"*32, "live brixton.jpg")
 
@@ -271,12 +271,13 @@ while True:
         i = -1
         while i not in range(0, numFindFile +1):
             i = int(input("Scegli il file da scaricare oppure no (0 Non scarica nulla)\n"))
+            if database.checkPkt(pktID) == False:
+                break
 
-        # Ogni 3 secondi controllo di avere risposte
-        while numFindFile == 0 and database.checkPkt(pktID)==True:
-            True
+        if numFindFile == 0:
+            print ("Nessun risultato di ricerca ricevuto")
 
-        if i > 0:
+        elif i > 0:
             i = i - 1;
             ipp2p = listFindFile[i][1]
             pp2p = listFindFile[i][2]
