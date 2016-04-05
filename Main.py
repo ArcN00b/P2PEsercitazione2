@@ -69,8 +69,8 @@ class ReceiveServerIPV6(asyncore.dispatcher):
 class ReceiveHandler(asyncore.dispatcher_with_send):
 
     def __init__(self, conn_sock, near_address, data):
+        self.dataRec=''
         asyncore.dispatcher_with_send.__init__(self,conn_sock)
-        self.dataRec = ''
         self.near_address = near_address
         self.data_tuple = data
 
@@ -200,6 +200,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 if database.checkPkt(pkID)==True and find==False:
                     database.addClient(ip,port)
 
+
             else:
                 print("ricevuto altro")
 
@@ -215,9 +216,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
         #try:
         self.response(self.dataRec)
         #except Exception:
-        #    self.response(data)
-
-
+        #    self.response(self.dataRec)
         self.close()
 
     def handle_error(self):
@@ -231,8 +230,8 @@ numFindFile=0
 listFindFile=[]
 database = ManageDB()
 # TODO completare con la lista dei near iniziali
-database.addClient(ip="172.030.007.001|fc00:0000:0000:000:0000:0000:0007:0001",port="3000")
-#database.addClient(ip="172.030.007.002|fc00:0000:0000:000:0000:0000:0007:0002",port="3000")
+#database.addClient(ip="172.030.007.003|fc00:0000:0000:000:0000:0000:0007:0003",port="3000")
+#database.addClient(ip="172.030.007.004|fc00:0000:0000:000:0000:0000:0007:0004",port="3000")
 
 #database.addFile("1"*32, "live brixton.jpg")
 
