@@ -57,7 +57,7 @@ class ReceiveServerIPV6(asyncore.dispatcher):
         self.create_socket(socket.AF_INET6,socket.SOCK_STREAM)#crea socket ipv6
         self.set_reuse_addr()#riusa indirizzo, evita problemi indirizzo occupato
         self.bind((ip, port)) #crea la bind del mio ip e porta
-        self.listen(5)# sta in ascolto di 5 persone max
+        self.listen(5)# sta in ascolto di 5 persone
 
     def handle_accepted(self, socket_peer, address_peer):
         handler = ReceiveHandler(socket_peer, address_peer, self.data_t)
@@ -66,11 +66,11 @@ class ReceiveServerIPV6(asyncore.dispatcher):
         while self.squeue.qsize() == 0:
             asyncore.loop(timeout=1, count=5)
 
-class ReceiveHandler(asyncore.dispatcher_with_send):
+class ReceiveHandler(asyncore.dispatcher):
 
     def __init__(self, conn_sock, near_address, data):
-        self.dataRec=''
-        asyncore.dispatcher_with_send.__init__(self,conn_sock)
+        asyncore.dispatcher.__init__(self,conn_sock)
+        self.dataRec = ''
         self.near_address = near_address
         self.data_tuple = data
 
@@ -161,7 +161,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
             elif command=="AQUE":
                 pkID = fields[0]
-                if database.checkPkt(pkID)==True:
+                if database.checkPkt(pkID)==True and fields[3] not in listFindFile:
                     global numFindFile
                     numFindFile+=1
                     ipServer = fields[1]
@@ -200,7 +200,6 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 if database.checkPkt(pkID)==True and find==False:
                     database.addClient(ip,port)
 
-
             else:
                 print("ricevuto altro")
 
@@ -222,16 +221,12 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
     def handle_error(self):
         self.response(self.dataRec)
 
-    def handle_expt(self):
-        print("Eccezione out_buffer")
-
-
 numFindFile=0
 listFindFile=[]
 database = ManageDB()
 # TODO completare con la lista dei near iniziali
-#database.addClient(ip="172.030.007.003|fc00:0000:0000:000:0000:0000:0007:0003",port="3000")
-#database.addClient(ip="172.030.007.004|fc00:0000:0000:000:0000:0000:0007:0004",port="3000")
+database.addClient(ip="172.030.007.001|fc00:0000:0000:000:0000:0000:0007:0001",port="3000")
+#database.addClient(ip="172.030.007.002|fc00:0000:0000:000:0000:0000:0007:0002",port="3000")
 
 #database.addFile("1"*32, "live brixton.jpg")
 

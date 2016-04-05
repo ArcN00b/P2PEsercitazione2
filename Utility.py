@@ -6,14 +6,14 @@ import threading
 
 class Utility:
 
-    MY_IPV4="172.030.007.001"
-    MY_IPV6="fc00:0000:0000:0000:0000:0000:0007:0001"
+    MY_IPV4="172.030.007.004"
+    MY_IPV6="fc00:0000:0000:0000:0000:0000:0007:0004"
 
     #MY_IPV4="127.000.000.001"
     #MY_IPV6="0000:0000:0000:0000:0000:0000:0000:0001"
 
     PORT=3000
-    PATHDIR='/home/flavio/Scrivania/File/'
+    PATHDIR='/home/simone/Immagini/'
 
     # Metodo che genera un numero random nel range [1024, 65535]
     @staticmethod
@@ -195,6 +195,7 @@ class Downloader:
             buffer = bytes()
 
             # Finchè i chunk non sono completi
+            print("Download in corso")
             for count_chunk in range (0 , num_chunk):
                 tmp = sock.recv(5) #leggo la lunghezza del chunk
                 while len(tmp) < 5:
@@ -218,3 +219,4 @@ class Downloader:
                 f.write(buffer)  # Scrivo il contenuto del chunk nel file
 
             f.close()
+            print("Download completato")
