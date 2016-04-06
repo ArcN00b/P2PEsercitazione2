@@ -2,6 +2,7 @@
 # I peer sono salvati nella tabella CLIENTS
 # CLIENTS:  IP      PORT
 # FILES:    MD5     NAME
+# PACKETS:  ID      DATE
 
 import sqlite3
 import time
@@ -28,6 +29,11 @@ class ManageDB:
             # Creo la tabella dei packetId e la cancello se esiste
             c.execute("DROP TABLE IF EXISTS PACKETS")
             c.execute("CREATE TABLE PACKETS (ID TEXT NOT NULL, DATE INTEGER NOT NULL)")
+
+            # Imposto il tempo di cancellazione dei packets
+            # Default: 5 minuti = 300 secondi
+            # Possibile impostare da programma con comando: manager.deleteTime = 300
+            self.deleteTime = 300
 
             #conn.isolation_level = None
 
@@ -441,14 +447,14 @@ class ManageDB:
             c = conn.cursor()
 
             # Rimuovo i packets meno recenti ed aggiungo il packet
-            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
+            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', 'LOCALTIME', ?)" , ("-" + str(self.deleteTime) + " SECONDS",) )
             conn.commit()
 
             # Inserisco il packet solamento se non presente
             c.execute("SELECT COUNT(ID) FROM PACKETS WHERE ID=:COD", {"COD": id})
             count = c.fetchall()
             if(count[0][0] == 0):
-                c.execute("INSERT INTO PACKETS (ID, DATE) VALUES ( ?, DATETIME('NOW'))" , (id,))
+                c.execute("INSERT INTO PACKETS (ID, DATE) VALUES ( ?, DATETIME('NOW', 'LOCALTIME'))" , (id,))
 
             conn.commit()
 
@@ -477,7 +483,7 @@ class ManageDB:
             # Rimuovo il packet ed elimino i packets meno recenti
             c.execute("DELETE FROM PACKETS WHERE ID=:COD" , {"COD": id} )
             conn.commit()
-            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
+            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', 'LOCALTIME', ?)" , ("-" + str(self.deleteTime) + " SECONDS",) )
             conn.commit()
 
         except sqlite3.Error as e:
@@ -503,7 +509,7 @@ class ManageDB:
             c = conn.cursor()
 
             # Elimino i packets meno recenti e prelevo la lista di packets
-            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
+            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', 'LOCALTIME', ?)" , ("-" + str(self.deleteTime) + " SECONDS",) )
             conn.commit()
             c.execute("SELECT ID FROM PACKETS")
             conn.commit()
@@ -529,7 +535,7 @@ class ManageDB:
             c = conn.cursor()
 
             # Rimuovo i packets meno recenti
-            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
+            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', 'LOCALTIME', ?)" , ("-" + str(self.deleteTime) + " SECONDS",) )
             conn.commit()
 
         except sqlite3.Error as e:
@@ -551,7 +557,7 @@ class ManageDB:
             c = conn.cursor()
 
             # Elimino i packets meno recenti e verifico se e' presente il packet
-            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', '-5 MINUTES')")
+            c.execute("DELETE FROM PACKETS WHERE DATE < datetime('now', 'LOCALTIME', ?)" , ("-" + str(self.deleteTime) + " SECONDS",) )
             conn.commit()
             c.execute("SELECT COUNT(ID) FROM PACKETS WHERE ID=:COD" , {"COD": id} )
             conn.commit()
@@ -583,6 +589,9 @@ class ManageDB:
 # TEST PACKETID CON DATABASE
 manager = ManageDB()
 
+print('deleteTime: {0}'.format(manager.deleteTime))
+print("")
+
 # Inserisco packet
 print("1) Inserisco packet")
 manager.addPkt(1)
@@ -596,7 +605,6 @@ for row in all_rows:
 print("")
 
 
-
 # Cerco un packet
 print("Ricerco un packet")
 
@@ -604,7 +612,7 @@ if (manager.checkPkt(1)):
     print("True: packet presente")
 else:
     print("False: packet non presente")
-
+print("")
 
 # Rimuovo packet
 print("2) Rimuovo packet")
@@ -616,14 +624,8 @@ for row in all_rows:
     print('{0}'.format(row[0]))
 print("")
 
-# Inserire -1 SECONDS al posto di -5 MINUTES in removeOldPkt
-# Aggiungo una sleep per effettuare un ritardo tra l'inserimento e la rimozione
 
-# Sleep che da esito incerto: possono essere rimossi o meno i packets a seconda dell'esecuzione
-time.sleep(1.3)
-
-# Sleep sufficiente a rimuovere i packets
-# time.sleep(2)
+time.sleep(manager.deleteTime+1)
 
 
 # Aggiorno i packets
@@ -635,6 +637,11 @@ all_rows = manager.listPkt()
 for row in all_rows:
     print('{0}'.format(row[0]))
 print("")
+
+print("Modifico il deleteTime")
+print('deleteTime: {0}'.format(manager.deleteTime))
+manager.deleteTime = 3
+print('deleteTime: {0}'.format(manager.deleteTime))
 
 '''
 
