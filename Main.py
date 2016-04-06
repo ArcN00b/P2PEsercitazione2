@@ -66,11 +66,11 @@ class ReceiveServerIPV6(asyncore.dispatcher):
         while self.squeue.qsize() == 0:
             asyncore.loop(timeout=1, count=5)
 
-class ReceiveHandler(asyncore.dispatcher_with_send):
+class ReceiveHandler(asyncore.dispatcher):
 
     def __init__(self, conn_sock, near_address, data):
-        self.dataRec=''
-        asyncore.dispatcher_with_send.__init__(self,conn_sock)
+        asyncore.dispatcher.__init__(self,conn_sock)
+        self.dataRec = ''
         self.near_address = near_address
         self.data_tuple = data
 
@@ -83,7 +83,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
             if command == "RETR":
                 # Imposto la lunghezza dei chunk e ottengo il nome del file a cui corrisponde l'md5
-                chuncklen = 1024;
+                chuncklen = 512
                 peer_md5 = fields[0]
                 obj = database.findFile(peer_md5)
 
@@ -161,7 +161,7 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
             elif command=="AQUE":
                 pkID = fields[0]
-                if database.checkPkt(pkID)==True:
+                if database.checkPkt(pkID)==True and fields[3] not in listFindFile:
                     global numFindFile
                     numFindFile+=1
                     ipServer = fields[1]
@@ -200,7 +200,6 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
                 if database.checkPkt(pkID)==True and find==False:
                     database.addClient(ip,port)
 
-
             else:
                 print("ricevuto altro")
 
@@ -221,10 +220,6 @@ class ReceiveHandler(asyncore.dispatcher_with_send):
 
     def handle_error(self):
         self.response(self.dataRec)
-
-    def handle_expt(self):
-        print("Eccezione out_buffer")
-
 
 numFindFile=0
 listFindFile=[]
@@ -311,6 +306,9 @@ while True:
             t1.run()
 
     elif sel=="3":
+
+        # Rimuovo i file presenti al momento nel database
+        database.removeAllFile()
 
         #Ottengo la lista dei file dalla cartella corrente
         lst = os.listdir(Utility.PATHDIR)
