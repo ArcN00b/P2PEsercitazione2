@@ -71,6 +71,7 @@ class ReceiveHandler(asyncore.dispatcher):
     def __init__(self, conn_sock, near_address, data):
         asyncore.dispatcher.__init__(self,conn_sock)
         self.dataRec = ''
+        self.canRead = True
         self.near_address = near_address
         self.data_tuple = data
 
@@ -101,6 +102,7 @@ class ReceiveHandler(asyncore.dispatcher):
                     num_chunk = str(num_chunk).zfill(6)
                     # costruzione risposta come ARET0000XX
                     mess = ('ARET' + num_chunk).encode()
+                    self.canRead = False
                     self.send(mess)
 
                     # Apro il file in lettura e ne leggo una parte
@@ -113,7 +115,6 @@ class ReceiveHandler(asyncore.dispatcher):
                         # Invio la lunghezza del chunk
                         mess = str(len(r)).zfill(5).encode()
                         self.send(mess)
-                        time.sleep(0.001)
 
                         # Invio il chunk
                         mess = r
@@ -122,6 +123,7 @@ class ReceiveHandler(asyncore.dispatcher):
                         # Proseguo la lettura del file
                         r = f.read(chuncklen)
                     # Chiudo il file
+                    self.canRead = True
                     f.close()
 
             elif(command == "QUER"):
@@ -217,6 +219,9 @@ class ReceiveHandler(asyncore.dispatcher):
         #except Exception:
         #    self.response(self.dataRec)
         self.close()
+
+        def readable(self):
+            return self.canRead
 
     def handle_error(self):
         self.response(self.dataRec)
