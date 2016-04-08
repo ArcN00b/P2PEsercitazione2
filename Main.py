@@ -66,10 +66,10 @@ class ReceiveServerIPV6(asyncore.dispatcher):
         while self.squeue.qsize() == 0:
             asyncore.loop(timeout=1, count=5)
 
-class ReceiveHandler(asyncore.dispatcher):
+class ReceiveHandler(asyncore.dispatcher_with_send):
 
     def __init__(self, conn_sock, near_address, data):
-        asyncore.dispatcher.__init__(self,conn_sock)
+        asyncore.dispatcher_with_send.__init__(self,conn_sock)
         self.dataRec = ''
         self.near_address = near_address
         self.data_tuple = data
@@ -113,11 +113,11 @@ class ReceiveHandler(asyncore.dispatcher):
                         # Invio la lunghezza del chunk
                         mess = str(len(r)).zfill(5).encode()
                         self.send(mess)
-                        time.sleep(0.001)
 
                         # Invio il chunk
                         mess = r
                         self.send(mess)
+                        time.sleep(0.01)
 
                         # Proseguo la lettura del file
                         r = f.read(chuncklen)
@@ -203,8 +203,6 @@ class ReceiveHandler(asyncore.dispatcher):
             else:
                 print("ricevuto altro")
 
-        self.close()
-
 
     # Questo e il metodo che viene chiamato quando ci sono delle recive
     def handle_read(self):
@@ -225,8 +223,8 @@ numFindFile=0
 listFindFile=[]
 database = ManageDB()
 # TODO completare con la lista dei near iniziali
-database.addClient(ip="172.030.007.001|fc00:0000:0000:000:0000:0000:0007:0001",port="3000")
-database.addClient(ip="172.030.007.002|fc00:0000:0000:000:0000:0000:0007:0002",port="3000")
+# database.addClient(ip="172.030.007.001|fc00:0000:0000:000:0000:0000:0007:0001",port="3000")
+database.addClient(ip="172.030.007.002|fc00:0000:0000:0000:0000:0000:0007:0002",port="3000")
 
 #database.addFile("1"*32, "live brixton.jpg")
 
